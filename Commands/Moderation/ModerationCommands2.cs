@@ -29,7 +29,7 @@ namespace OriBot.Commands {
             try
             {
                 var userprofile = ProfileManager.GetUserProfile(user.Id);
-                if (userprofile.GetPermissionLevel(Context.Guild.Id) >= PermissionLevel.Member)
+                if (await userprofile.GetPermissionLevel(Context.Guild.Id) >= PermissionLevel.Member)
                 {
 
                     await CommandLogger.LogCommandAsync(Context.User.Id, Context.Guild as SocketGuild,
@@ -55,7 +55,9 @@ namespace OriBot.Commands {
                     embed = embed.WithFooter(embed.Footer.Text + $" | Person ID: {user.Id}");
                     await (Channels.GetModerationChannel(user.Guild) as SocketTextChannel).SendMessageAsync("", embed: embed.Build());
                 }
-                userprofile.SetPermissionLevel(PermissionLevel.Member, Context.Guild.Id);
+                var normalrole = Context.Guild.Roles.Where(x => x.Name == ModerationModule.NormalRoleName).FirstOrDefault();
+
+                await user.AddRoleAsync(normalrole);
                 await RespondAsync($"User elevated to Member.", ephemeral: true);
                 await CommandLogger.LogCommandAsync(Context.User.Id, Context.Guild as SocketGuild,
                     new CommandSuccessLogEntry(Context.User.Id, "verify", DateTime.UtcNow, Context.Guild as SocketGuild)

@@ -117,23 +117,23 @@ namespace OriBot.Commands
     public static class ModerationConstants
     {
         public static Requirements ModeratorRequirements => new Requirements(
-            (context, _, _) =>
+            async (context, _, _) =>
             {
                 if (context.Interaction.IsDMInteraction)
                 {
-                    context.Interaction.RespondAsync("This command is not available in DMs.", ephemeral: true);
+                    _ = context.Interaction.RespondAsync("This command is not available in DMs.", ephemeral: true);
                     return false;
                 }
                 return true;
             },
-            (context, _, _) =>
+            async (context, _, _) =>
             {
                 var res = ((List<long>)Config.properties["oricordServers"].ToObject<List<long>>()).Contains((long)context.Guild.Id);
                 return res;
             },
-            (context, _, _) => {
+            async (context, _, _) => {
                 var userprofile = ProfileManager.GetUserProfile(context.User.Id);
-                if (userprofile.GetPermissionLevel(context.Guild.Id) < PermissionLevel.Moderator) {
+                if (await userprofile.GetPermissionLevel(context.Guild.Id) < PermissionLevel.Moderator) {
                     _ = context.Interaction.RespondAsync("You must be a Moderator or higher to execute this command.", ephemeral: true);
                     return false;
                 }
@@ -808,6 +808,7 @@ namespace OriBot.Commands
             try
             {
                 var userprofile = ProfileManager.GetUserProfile(user.Id);
+                
                 if (userprofile.IsMuted)
                 {
                     await RespondAsync($"{user.Mention} is already muted.", ephemeral: true);
@@ -817,6 +818,11 @@ namespace OriBot.Commands
                             .WithAdditonalField("Reason", $"{reason}")
                             .WithAdditonalField("Duration", $"<t:{Math.Floor(DateTime.UtcNow.Add(duration).Subtract(DateTime.UnixEpoch).TotalSeconds)}:R>")
                         );
+                    return;
+                }
+                if (await userprofile.GetPermissionLevel(Context.Guild.Id) <= PermissionLevel.NewUser)
+                {
+                    await RespondAsync("User has not accepted ToS yet.");
                     return;
                 }
 

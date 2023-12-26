@@ -24,13 +24,13 @@ namespace OriBot.Commands
 
         public override Requirements GetRequirements()
         {
-            return new Requirements((context, commandinfo, services) =>
+            return new Requirements(async (context, commandinfo, services) =>
             {
                 ulong[] servers = { 1005355539447959552, 988594970778804245, 1131908192004231178, 927439277661515776 };
                 return servers.Contains(context.Guild.Id);
-            }, (context, commandinfo, services) =>
+            }, async (context, commandinfo, services) =>
             {
-                if (ProfileManager.GetUserProfile(context.User.Id).GetPermissionLevel(context.Guild.Id) >= PermissionLevel.Moderator)
+                if (await ProfileManager.GetUserProfile(context.User.Id).GetPermissionLevel(context.Guild.Id) >= PermissionLevel.Moderator)
                 {
                     return true;
                 }

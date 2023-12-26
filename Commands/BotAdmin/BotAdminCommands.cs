@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 using Discord;
@@ -24,10 +25,12 @@ using OriBot.Utilities;
 namespace OriBot.Commands
 {
 
-    
+   
     [Requirements(typeof(BotAdminCommands))]
     public class BotAdminCommands : OricordCommand
     {
+
+        private static readonly Regex idMatcher = new("(?=\\/?)[0-9]+(?=\\/?)");
 
         public enum ChannelType {
             ModerationLogging,
@@ -35,6 +38,11 @@ namespace OriBot.Commands
             Ticket,
             VoiceLogging,
             MessageLogging
+        }
+
+        public enum MessageType
+        {
+            WelcomeReadmeMessage
         }
         [SlashCommand("promote", "Promotes a user to a higher or lower permission level")]
         public async Task PromoteUser(SocketGuildUser user, PermissionLevel level)
@@ -53,7 +61,7 @@ namespace OriBot.Commands
                     await RespondAsync($"You cannot change your own permission level", ephemeral: true);
                     return;
                 }
-                if (targetprofile.GetPermissionLevel(Context.Guild.Id) >= myprofile.GetPermissionLevel(Context.Guild.Id))
+                if (await targetprofile.GetPermissionLevel(Context.Guild.Id) >= await myprofile.GetPermissionLevel(Context.Guild.Id))
                 {
                     await CommandLogger.LogCommandAsync(Context.User.Id, Context.Guild as SocketGuild,
                         new CommandWarningLogEntry(Context.User.Id, "promote", DateTime.UtcNow, Context.Guild as SocketGuild, $"User is at a higher level or the same level as you. You cannot manage their permission level.")
@@ -63,7 +71,7 @@ namespace OriBot.Commands
                     await RespondAsync($"User is at a higher level or the same level as you. You cannot manage their permission level.", ephemeral: true);
                     return;
                 }
-                if (level >= myprofile.GetPermissionLevel(Context.User.Id)) 
+                if (level >= await myprofile.GetPermissionLevel(Context.User.Id)) 
                 {
                     await CommandLogger.LogCommandAsync(Context.User.Id, Context.Guild as SocketGuild,
                         new CommandWarningLogEntry(Context.User.Id, "promote", DateTime.UtcNow, Context.Guild as SocketGuild, $"You cannot elevate this user to a higher level than your level.")
@@ -72,10 +80,26 @@ namespace OriBot.Commands
                     );
                     await RespondAsync($"You cannot elevate this user to a higher level than yours.", ephemeral: true);
                 }
+                var normalrole = Context.Guild.Roles.Where(x => x.Name == ModerationModule.NormalRoleName).FirstOrDefault();
+                if (level <= PermissionLevel.NewUser)
+                {
+                   
+                    if (user.Roles.Where(x => x.Id == normalrole.Id).Any())
+                    {
+                        await user.RemoveRoleAsync(normalrole.Id);
+                    }
+                }
+                if (level > PermissionLevel.NewUser)
+                {
+                    if (!user.Roles.Where(x => x.Id == normalrole.Id).Any())
+                    {
+                        await user.AddRoleAsync(normalrole.Id);
+                    }
+                }
                 var logentry = UserBehaviourLogRegistry.CreateLogEntry<UserPromotedLogEntry>();
                 logentry.ModeratorId = Context.User.Id;
                 logentry.AfterLevel = level;
-                logentry.PreviousLevel = targetprofile.GetPermissionLevel(Context.Guild.Id);
+                logentry.PreviousLevel = await targetprofile.GetPermissionLevel(Context.Guild.Id);
                 if (targetprofile.BehaviourLogs.Logs.Count == 0)
                 {
                     logentry.ID = 1;
@@ -142,13 +166,50 @@ namespace OriBot.Commands
             }
         }
 
+        [SlashCommand("setmessage", "Configures what message the bot will use for certain things")]
+        public async Task SetMessage(string messagelink, MessageType messageType)
+        {
+            
+            try
+            {
+                await DeferAsync();
+                switch (messageType)
+                {
+                    case MessageType.WelcomeReadmeMessage:
+                       
+                        List<Match> matches = idMatcher.Matches(messagelink).ToList();
+                        await FollowupAsync("Finished matching.");
+                        foreach (var item in matches)
+                        {
+                            await FollowupAsync("Regex test: " + item.Value);
+                        }
+                        break;
+                    default:
+                        break;
+                }
+                
+                //await RespondAsync($"Successfully set message https://discord.com/channels/{Context.Guild.Id}/{channel.Id} for the purpose of {channelType}", ephemeral: true);
+                //await CommandLogger.LogCommandAsync(Context.User.Id, Context.Guild as SocketGuild,
+                //    new CommandSuccessLogEntry(Context.User.Id, "setchannel", DateTime.UtcNow, Context.Guild as SocketGuild)
+                //);
+            }
+            catch (Exception e)
+            {
+                
+                await CommandLogger.LogCommandAsync(Context.User.Id, Context.Guild as SocketGuild,
+                    new CommandUnhandledExceptionLogEntry(Context.User.Id, "setmessage", DateTime.UtcNow, Context.Guild as SocketGuild, e)
+                    .WithAdditonalField("Exception", $"{e.StackTrace}")
+                );
+            }
+        }
+
         public override Requirements GetRequirements()
         {
             var tmp = ModerationConstants.ModeratorRequirements;
             tmp.AddRequirement(
-                (context, _, _) => {
+                async (context, _, _) => {
                     var userprofile = ProfileManager.GetUserProfile(context.User.Id);
-                    if (userprofile.GetPermissionLevel(context.Guild.Id) < PermissionLevel.BotAdmin)
+                    if (await userprofile.GetPermissionLevel(context.Guild.Id) < PermissionLevel.BotAdmin)
                     {
                         _ = context.Interaction.RespondAsync("You must be a BotAdmin or higher to execute this command.", ephemeral: true);
                         return false;

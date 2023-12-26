@@ -13,11 +13,13 @@
     <None Remove="Framework\ImportedCode\EtiBotCore\**" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Discord.Net" Version="3.11.0" />
+    <PackageReference Include="Discord.Net" Version="3.13.0" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="6.0.0" />
   </ItemGroup>
   <ItemGroup>
+    <Folder Include="Data\UserProfiles\" />
     <Folder Include="Framework\ImportedCode\" />
+    <Folder Include="RolesHub\" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="Framework\ImportedCode\EtiBotCore\OriBotV3\OldOriBot.csproj" />

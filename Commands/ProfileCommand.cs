@@ -39,14 +39,14 @@ namespace OriBot.Commands
     [Group("profile", "Profile Commands")]
     public class ProfileModule : OricordCommand
     {
-        private Requirements IsUserAMod => new Requirements((context, commandinfo, services) =>
+        private Requirements IsUserAMod => new Requirements(async (context, commandinfo, services) =>
         {
             if (context.Interaction.IsDMInteraction)
             {
                 _ = Context.Interaction.RespondAsync("Sorry, please execute this command on a guild.");
                 return false;
             }
-            else if (ProfileManager.GetUserProfile(context.User.Id).GetPermissionLevel(context.Guild.Id) >= PermissionLevel.Moderator)
+            else if (await ProfileManager.GetUserProfile(context.User.Id).GetPermissionLevel(context.Guild.Id) >= PermissionLevel.Moderator)
             {
                 return true;
             }
@@ -240,7 +240,7 @@ namespace OriBot.Commands
                         embed.WithAuthor(discorduser2);
                         discorduser = discorduser2;
                     }
-                    if (!IsUserAMod.CheckRequirements(Context,null,null) && userprofile.UserID != Context.User.Id) {
+                    if (!await IsUserAMod.CheckRequirements(Context,null,null) && userprofile.UserID != Context.User.Id) {
                         await RespondAsync("Sorry, only moderators can change other people's user profiles.");
                         await CommandLogger.LogCommandAsync(Context.User.Id, Context.Guild as SocketGuild,
                                 new CommandWarningLogEntry(Context.User.Id, "profile settings", DateTime.UtcNow, Context.Guild as SocketGuild, "Sorry, only moderators can change other people's user profiles.")
@@ -362,7 +362,7 @@ namespace OriBot.Commands
                     }
                     else
                     {
-                        builtpermissionlevel = $"Permission Level {(int)userprofile.GetPermissionLevel(Context.Guild.Id)} [\"{userprofile.GetPermissionLevel(Context.Guild.Id)}\"]";
+                        builtpermissionlevel = $"Permission Level {(int)await userprofile.GetPermissionLevel(Context.Guild.Id)} [\"{await userprofile.GetPermissionLevel(Context.Guild.Id)}\"]";
                     }
                 }
                 embed.WithColor(userprofile.Color);

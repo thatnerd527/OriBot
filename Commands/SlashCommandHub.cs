@@ -19,22 +19,22 @@ namespace OriBot.Commands
             classtarget = requirementsengine;
         }
 
-        public override Task<PreconditionResult> CheckRequirementsAsync(IInteractionContext context, ICommandInfo commandInfo, IServiceProvider services)
+        public override async Task<PreconditionResult> CheckRequirementsAsync(IInteractionContext context, ICommandInfo commandInfo, IServiceProvider services)
         {
             if (classtarget.IsAbstract)
             {
-                return Task.FromResult(PreconditionResult.FromError("Abstract. "));
+                return PreconditionResult.FromError("Abstract. ");
             }
             var tmp = Activator.CreateInstance(classtarget);
             if (!(tmp is IRequirementCheck engine))
             {
                 Logger.Error($"PLEASE FIX: {tmp.GetType().Name} does not implement IPermissionCheck.");
-                return Task.FromResult(PreconditionResult.FromError("PLEASE FIX: " + tmp.GetType().Name + " does not implement IPermissionCheck."));
+                return PreconditionResult.FromError("PLEASE FIX: " + tmp.GetType().Name + " does not implement IPermissionCheck.");
             } else {
-                if (engine.GetRequirements().CheckRequirements(context,commandInfo,services)) {
-                    return Task.FromResult(PreconditionResult.FromSuccess());
+                if (await engine.GetRequirements().CheckRequirements(context,commandInfo,services)) {
+                    return PreconditionResult.FromSuccess();
                 } else {
-                    return Task.FromResult(PreconditionResult.FromError("You do not meet the requirements"));
+                    return PreconditionResult.FromError("You do not meet the requirements");
                 }
             }
         }

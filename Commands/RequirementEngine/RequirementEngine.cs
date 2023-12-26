@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 
 using Discord;
 using Discord.Interactions;
@@ -14,7 +15,7 @@ namespace OriBot.Commands.RequirementEngine
     /// </summary>
     public class Requirements
     {
-        private List<Func<IInteractionContext, ICommandInfo, IServiceProvider, bool>> _requirement = new();
+        private List<Func<IInteractionContext, ICommandInfo, IServiceProvider, Task<bool>>> _requirement = new();
 
         /// <summary>
         /// Execute this method with the current <see cref="DiscordSocketClient"/> and the current <see cref="SocketMessage"/> that's being processed to check whether the client and message fufils this requirement.
@@ -22,11 +23,11 @@ namespace OriBot.Commands.RequirementEngine
         /// <param name="client"></param>
         /// <param name="message"></param>
         /// <returns></returns>
-        public bool CheckRequirements(IInteractionContext context, ICommandInfo message, IServiceProvider services)
+        public async Task<bool> CheckRequirements(IInteractionContext context, ICommandInfo message, IServiceProvider services)
         {
             foreach (var requirement in _requirement)
             {
-                if (!requirement(context, message, services))
+                if (!await requirement(context, message, services))
                 {
                     return false;
                 }
@@ -39,7 +40,7 @@ namespace OriBot.Commands.RequirementEngine
         /// If you're not planning to add anymore conditions after instantiation / construction in your command , then please add conditions using the constructor instead.
         /// </summary>
         /// <param name="requirement"></param>
-        public void AddRequirement(Func<IInteractionContext, ICommandInfo, IServiceProvider, bool> requirement)
+        public void AddRequirement(Func<IInteractionContext, ICommandInfo, IServiceProvider, Task<bool>> requirement)
         {
             _requirement.Add(requirement);
         }
@@ -57,7 +58,7 @@ namespace OriBot.Commands.RequirementEngine
         /// Remove a specific condition by its item in this <see cref="Requirements"/> object.
         /// </summary>
         /// <param name="requirement"></param>
-        public void RemoveRequirement(Func<IInteractionContext, ICommandInfo, IServiceProvider, bool> requirement)
+        public void RemoveRequirement(Func<IInteractionContext, ICommandInfo, IServiceProvider, Task<bool>> requirement)
         {
             _requirement.Remove(requirement);
         }
@@ -67,7 +68,7 @@ namespace OriBot.Commands.RequirementEngine
         /// You may pass in the conditions just like parameters in a function.
         /// </summary>
         /// <param name="requirements"></param>
-        public Requirements(params Func<IInteractionContext, ICommandInfo, IServiceProvider, bool>[] requirements)
+        public Requirements(params Func<IInteractionContext, ICommandInfo, IServiceProvider, Task<bool>>[] requirements)
         {
             foreach (var requirement in requirements)
             {

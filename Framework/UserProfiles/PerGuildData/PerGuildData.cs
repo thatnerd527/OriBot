@@ -12,9 +12,7 @@ namespace OriBot.Framework.UserProfiles.PerGuildData
     public class PerGuildData
     {
         private static Dictionary<string, object> DefaultData { get; } = new Dictionary<string, object>()
-        {
-            ["PermissionLevel"] = PermissionLevel.NewUser
-        };
+        {};
 
         private Action saveAction { get; set; }
 

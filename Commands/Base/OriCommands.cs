@@ -43,16 +43,16 @@ namespace OriBot.Commands
         public override Requirements GetRequirements()
         {
             return new Requirements(
-            (context, _, _) =>
+           async (context, _, _) =>
             {
                 if (context.Interaction.IsDMInteraction)
                 {
-                    context.Interaction.RespondAsync("Please execute this command in Oricord.", ephemeral: true);
+                    _ = context.Interaction.RespondAsync("Please execute this command in Oricord.", ephemeral: true);
                     return false;
                 }
                 return true;
-            }, 
-            (context, commandinfo, services) =>
+            },
+            async (context, commandinfo, services) =>
             {
                 var res = ((List<long>)Config.properties["oricordServers"].ToObject<List<long>>()).Contains((long)context.Guild.Id);
                 return res;

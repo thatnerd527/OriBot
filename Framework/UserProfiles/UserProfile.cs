@@ -12,6 +12,7 @@ using Newtonsoft.Json;
 
 using OldOriBot.Data.MemberInformation;
 
+using OriBot.Commands;
 using OriBot.Framework.UserBehaviour;
 using OriBot.Framework.UserProfiles;
 using OriBot.Framework.UserProfiles.Badges;
@@ -532,7 +533,7 @@ namespace OriBot.Framework.UserProfiles
 
         #region Permission Level
 
-        public PermissionLevel GetPermissionLevel(ulong serverid)
+        public async Task<PermissionLevel> GetPermissionLevel(ulong serverid)
         {
             /* if (serverid == 1005355539447959552) {
                 var textchannel = (SocketTextChannel)main.Program.Client.GetChannel(1140114672314495018);
@@ -545,9 +546,30 @@ namespace OriBot.Framework.UserProfiles
             if (permissionoverrides.ContainsKey(UserID)) {
                 return permissionoverrides[UserID];
             }
-            if (PerGuildData[serverid]["PermissionLevel"] is PermissionLevel)
+            if (!PerGuildData[serverid].Config.ContainsKey("PermissionLevel"))
             {
-                return (PermissionLevel)PerGuildData[serverid]["PermissionLevel"];
+                var guild = main.Program.Client.GetGuild(serverid);
+
+                var mutedrole = guild.Roles.Where(x => x.Name == ModerationModule.MutedRoleName).FirstOrDefault();
+                var normalrole = guild.Roles.Where(x => x.Name == ModerationModule.NormalRoleName).FirstOrDefault();
+
+                if (guild.GetUser(UserID) is null)
+                {
+                    return PermissionLevel.NewUser;
+                }
+                var user = guild.GetUser(UserID);
+                if (user.Roles.Where(x => x.Id == mutedrole.Id).Any())
+                {
+                    return PermissionLevel.NewUser;
+                }
+                if (user.Roles.Where(x => x.Id == normalrole.Id).Any())
+                {
+                    return PermissionLevel.Member;
+                }
+            }
+            if (PerGuildData[serverid]["PermissionLevel"] is PermissionLevel level)
+            {
+                return level;
             }
             else
             {
