@@ -72,7 +72,7 @@ namespace OriBot.Framework.UserProfiles
         /// This field is used by <see cref="BaseStorageDir"/>, to determine after $CWD/Data/ what the folder name will be.
         /// </summary>
         [JsonIgnore]
-        private static string StorageFolderName = Config.properties["userProfileFolderName"];
+        public static string StorageFolderName = Config.properties["userProfileFolderName"];
 
         #endregion Constants
 
@@ -358,7 +358,7 @@ namespace OriBot.Framework.UserProfiles
         /// This is the folder where all user profiles will be stored, use <see cref="StorageFolderName"/> to adjust what the directory will be called after $CWD/Data/
         /// </summary>
         [JsonIgnore]
-        private static string BaseStorageDir => Path.Combine(Environment.CurrentDirectory, "Data", StorageFolderName);
+        public static string BaseStorageDir => Path.Combine(Environment.CurrentDirectory, "Data", StorageFolderName);
 
         /// <summary>
         /// This property determines what the user profile file will be called.
