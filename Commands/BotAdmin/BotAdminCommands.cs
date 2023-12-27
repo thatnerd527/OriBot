@@ -205,7 +205,8 @@ namespace OriBot.Commands
 
         public override Requirements GetRequirements()
         {
-            var tmp = ModerationConstants.ModeratorRequirements;
+            var tmp = ModerationConstants.ModeratorRequirements.Clone();
+
             tmp.AddRequirement(
                 async (context, _, _) => {
                     var userprofile = ProfileManager.GetUserProfile(context.User.Id);

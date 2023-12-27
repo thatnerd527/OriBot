@@ -19,6 +19,7 @@
   <ItemGroup>
     <Folder Include="Data\UserProfiles\" />
     <Folder Include="Framework\ImportedCode\" />
+    <Folder Include="Personality\" />
     <Folder Include="RolesHub\" />
   </ItemGroup>
   <ItemGroup>

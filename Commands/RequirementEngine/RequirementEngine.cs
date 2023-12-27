@@ -46,6 +46,15 @@ namespace OriBot.Commands.RequirementEngine
         }
 
         /// <summary>
+        /// Use this function to clone the current <see cref="Requirements"/> object as another instance.
+        /// </summary>
+        /// <param name="requirement"></param>
+        public Requirements Clone()
+        {
+            return new Requirements(_requirement.ToArray());
+        }
+
+        /// <summary>
         /// Use this function to clear all of the conditions in the current <see cref="Requirements"/> object.
         /// If there are no conditions in a <see cref="Requirements"/> object then <see cref="CheckRequirements(DiscordSocketClient, SocketMessage)"/> will always return true.
         /// </summary>
