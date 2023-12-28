@@ -304,6 +304,12 @@ namespace OldOriBot.Data.Persistence {
 			For(to).AddEntry(moderator.ID, time ?? DateTimeOffset.UtcNow, LogType.Alert, reason, false);
 		}
 
+		public void AppendAlert(ulong moderator, Snowflake to, string reason, DateTimeOffset? time = null)
+		{
+			For(to).AddEntry(new Snowflake(moderator), time ?? DateTimeOffset.UtcNow, LogType.Alert, reason, false);
+		}
+
+
 		#endregion
 
 		/// <summary>
@@ -563,10 +569,10 @@ namespace OldOriBot.Data.Persistence {
 
 			public void Write(BinaryWriter writer) {
 				if (ThisLogVersion == 1) {
-					Member logFor = Creator.Context.Server.GetMemberAsync(UserID).GetAwaiter().GetResult();
-					if (logFor != null) {
-						IsComplete = logFor.JoinedAt > LogSystemCreatedAt;
-					}
+					//Member logFor = Creator.Context.Server.GetMemberAsync(UserID).GetAwaiter().GetResult();
+					//if (logFor != null) {
+					//	IsComplete = logFor.JoinedAt > LogSystemCreatedAt;
+					//}
 				}
 
 				ThisLogVersion = CURRENT_LOG_VERSION;

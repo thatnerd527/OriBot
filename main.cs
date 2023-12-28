@@ -9,9 +9,9 @@ using System.Threading.Tasks;
 using Discord;
 using Discord.Interactions;
 using Discord.WebSocket;
+using EtiBotCore.Data.Structs;
 using OldOriBot.Data.Persistence;
 using OriBot;
-using OriBot.;
 using OriBot.Commands;
 using OriBot.DB;
 using OriBot.EventHandlers;
@@ -97,14 +97,19 @@ namespace main
             string database = Path.Combine(AppContext.BaseDirectory, "Data", "db.db");
 
             List<UserProfile> profiles = Directory.EnumerateFiles(UserProfile.BaseStorageDir)
+                .Where(x => x.EndsWith(".json") || x.EndsWith(".profile"))
                 .Select(x => ulong.Parse(Path.GetFileNameWithoutExtension(x)))
                 .Select(x => ProfileManager.GetUserProfile(x))
                 .ToList();
 
             InfractionLogProvider infractionLogProvider = new InfractionLogProvider(@"F:\visualstudio\OriBot\Infractions");
+            infractionLogProvider.AppendAlert(194108558177075201, new Snowflake(796156698506035201), "askdijadkaodk");
+            infractionLogProvider.AppendAlert(194108558177075201, new Snowflake(796156698506035201), "askdijadkaodk");
+            infractionLogProvider.AppendAlert(194108558177075201, new Snowflake(796156698506035201), "askdijadkaodk");
+            
             foreach (var item in infractionLogProvider.GetAllLogs())
             {
-                Logger.Info(item);
+                Logger.Info(item.UserID.ToString());
             }
 
             using var db = new SpiritContext(database);
