@@ -83,15 +83,15 @@ namespace OldOriBot.Data.Persistence {
 			Context = context;
 		}
 
-		public InfractionLogProvider(string foldername)
+		private InfractionLogProvider()
 		{
 			//LOGGERS[context.ID] = this;
-			TargetFolder = new DirectoryInfo(foldername);
+			TargetFolder = PersistenceRootFolder.CreateSubdirectory(Path.Combine("InfractionLogging", context.DataPersistenceName));
 			if (!TargetFolder.Exists)
 			{
 				TargetFolder.Create();
 			}
-			//Context = context;
+			Context = context;
 		}
 
 		/// <summary>

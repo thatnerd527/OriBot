@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 using Discord;
 using Discord.Interactions;
 using Discord.WebSocket;
-
+using OldOriBot.Data.Persistence;
 using OriBot;
 using OriBot.;
 using OriBot.Commands;
@@ -100,6 +100,12 @@ namespace main
                 .Select(x => ulong.Parse(Path.GetFileNameWithoutExtension(x)))
                 .Select(x => ProfileManager.GetUserProfile(x))
                 .ToList();
+
+            InfractionLogProvider infractionLogProvider = new InfractionLogProvider(@"F:\visualstudio\OriBot\Infractions");
+            foreach (var item in infractionLogProvider.GetAllLogs())
+            {
+                Logger.Info(item);
+            }
 
             using var db = new SpiritContext(database);
             db.Database.EnsureDeleted();

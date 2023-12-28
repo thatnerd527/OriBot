@@ -83,17 +83,6 @@ namespace OldOriBot.Data.Persistence {
 			Context = context;
 		}
 
-		public InfractionLogProvider(string foldername)
-		{
-			//LOGGERS[context.ID] = this;
-			TargetFolder = new DirectoryInfo(foldername);
-			if (!TargetFolder.Exists)
-			{
-				TargetFolder.Create();
-			}
-			//Context = context;
-		}
-
 		/// <summary>
 		/// Returns an existing instance or creates a new instance of <see cref="InfractionLogProvider"/> for the given <see cref="BotContext"/>.
 		/// </summary>
