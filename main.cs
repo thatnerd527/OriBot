@@ -11,7 +11,9 @@ using Discord.Interactions;
 using Discord.WebSocket;
 
 using OriBot;
+using OriBot.;
 using OriBot.Commands;
+using OriBot.DB;
 using OriBot.EventHandlers;
 using OriBot.Framework;
 using OriBot.Framework.UserProfiles;
@@ -28,7 +30,7 @@ namespace main
 
     internal class Program
     {
-        public static Task Main(string[] args) => new Program().MainAsync();
+        public static void Main(string[] args) => Login();
 
         private static DiscordSocketClient _client;
 
@@ -38,12 +40,10 @@ namespace main
         {
             Logger.Cleanup(); // just in case the bot crashes or is forcefully shut off, this gets triggered
             using var ct = new CancellationTokenSource();
-            var task = Login(ct.Token);
             var inputTask = ReadConsoleInputAsync(ct.Token);
-            await Task.WhenAny(task, inputTask);
+            await Task.WhenAny(inputTask);
             ct.Cancel();
             await inputTask.ContinueWith(_ => { });
-            await task;
         }
 
         private async Task ReadConsoleInputAsync(CancellationToken cancellationToken)
@@ -87,19 +87,58 @@ namespace main
             }
         }
 
-        public async Task Login(CancellationToken ct)
+        public static void Login()
         {
             Logger.Info($"##############################");
             Logger.Info($"### Starting Oribot profile migrator v{Constants.OriBotVersion} ###");
             Logger.Info($"##############################");
 
+            string storage = UserProfile.BaseStorageDir;
+            string database = Path.Combine(AppContext.BaseDirectory, "Data", "db.db");
+
             List<UserProfile> profiles = Directory.EnumerateFiles(UserProfile.BaseStorageDir)
-            .Select(x => ulong.Parse(Path.GetFileNameWithoutExtension(x)))
-            .Select(x => ProfileManager.GetUserProfile(x))
-            .ToList();
+                .Select(x => ulong.Parse(Path.GetFileNameWithoutExtension(x)))
+                .Select(x => ProfileManager.GetUserProfile(x))
+                .ToList();
 
+            using var db = new SpiritContext(database);
+            db.Database.EnsureDeleted();
+            db.Database.EnsureCreated();
 
+            foreach (UserProfile profile in profiles)
+            {
+                User dbUser = new User
+                {
+                    UserId = profile.UserID
+                };
+                db.Users.Add(dbUser);
 
+                foreach (OriBot.Framework.UserProfiles.Badges.Badge badge in profile.Badges)
+                {
+                    Badge dbBadge = db.Badges.FirstOrDefault(b => b.BadgeName == badge.Name);
+                    if (dbBadge is null)
+                    {
+                        dbBadge = new Badge
+                        {
+                            BadgeName = badge.Name,
+                            BadgeDescription = badge.Description,
+                            BadgeEmote = badge.Icon
+                        };
+
+                        db.Badges.Add(dbBadge);
+                    }
+
+                    UserBadge dbUserBadge = new UserBadge
+                    {
+                        User = dbUser,
+                        Badge = dbBadge,
+                        Count = badge.Level
+                    };
+                    db.UserBadges.Add(dbUserBadge);
+                }
+            }
+
+            // put the code for infractions here, once we figure it out lmao
         }
 
         private void RegisterSlashCommands()
