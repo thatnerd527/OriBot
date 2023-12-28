@@ -306,7 +306,7 @@ namespace OldOriBot.Data.Persistence {
 
 		public void AppendAlert(ulong moderator, Snowflake to, string reason, DateTimeOffset? time = null)
 		{
-			For(to).AddEntry(new Snowflake(moderator), time ?? DateTimeOffset.UtcNow, LogType.Alert, reason, false);
+			For(to).AddEntry(Snowflake.Parse(moderator), time ?? DateTimeOffset.UtcNow, LogType.Alert, reason, false);
 		}
 
 
@@ -359,9 +359,7 @@ namespace OldOriBot.Data.Persistence {
 			/// <summary>
 			/// The logged actions taken upon this user. Note that this may be invalid if <see cref="IsAlt"/> is true, though generally alt <see cref="InfractionLog"/> instances try to mirror that of their main.
 			/// </summary>
-			private List<InfractionLogEntry> _Entries { get; set; } = new List<InfractionLogEntry>();
-
-			public List<InfractionLogEntry> Entries => _Entries.ToList();
+			private List<InfractionLogEntry> Entries { get; set; } = new List<InfractionLogEntry>();
 
 			/// <summary>
 			/// All accounts that have been authorized for this user as alts. This will only exist for a user's main. If this is an alt, then <see cref="MainID"/> should be used.
@@ -399,8 +397,6 @@ namespace OldOriBot.Data.Persistence {
 
 			private void Save() => Creator.Save(this);
 
-			
-
 			/// <summary>
 			/// Adds a new log entry. If <see cref="IsAlt"/> is <see langword="true"/>, then this will apply to their main and will not modify this object. This also saves the log.
 			/// </summary>
@@ -425,7 +421,7 @@ namespace OldOriBot.Data.Persistence {
 				//InfractionLogEntry entry = new InfractionLogEntry(this, moderator, time, type, reason, auto, newAltId);
 				InfractionLogEntry entry = new InfractionLogEntry(moderator, time, type, reason, auto, newAltId);
 				if (hidden) entry.SetDeleted(true);
-				_Entries.Add(entry);
+				Entries.Add(entry);
 
 				if (type == LogType.AuthorizeAlt) {
 					if (!KnownAltIDs.Contains(newAltId.Value)) {
@@ -435,16 +431,16 @@ namespace OldOriBot.Data.Persistence {
 					InfractionLog altLog = Creator.For(newAltId.Value);
 					altLog.RegisterMain(UserID);
 					altLog.IsAuthorized = true;
-					if (altLog._Entries.Count > 0) {
+					if (altLog.Entries.Count > 0) {
 						// Maybe their alt already has entries. If it does, we need to copy them to their main which will mirror itself to the alt.
 						// The goal is to NOT delete existing history, granted it exists.
-						foreach (InfractionLogEntry altEntry in altLog._Entries) {
-							if (!_Entries.Contains(altEntry)) {
-								_Entries.Add(altEntry);
+						foreach (InfractionLogEntry altEntry in altLog.Entries) {
+							if (!Entries.Contains(altEntry)) {
+								Entries.Add(altEntry);
 							}
 						}
 
-						_Entries.Sort();
+						Entries.Sort();
 					}
 				} else if (type == LogType.RevokeAlt) {
 					InfractionLog altLog = Creator.For(newAltId.Value);
@@ -466,45 +462,45 @@ namespace OldOriBot.Data.Persistence {
 			/// Returns the entry at the given index.
 			/// </summary>
 			/// <param name="index"></param>
-			public InfractionLogEntry GetEntry(int index) => _Entries[index];
+			public InfractionLogEntry GetEntry(int index) => Entries[index];
 
 			/// <summary>
 			/// Returns the first entry that satisfies the given predicate. Otherwise, returns null.
 			/// </summary>
 			/// <param name="predicate"></param>
 			/// <returns></returns>
-			public InfractionLogEntry FindEntry(Predicate<InfractionLogEntry> predicate) => _Entries.Find(predicate);
+			public InfractionLogEntry FindEntry(Predicate<InfractionLogEntry> predicate) => Entries.Find(predicate);
 
 			/// <summary>
 			/// Returns whether or not an entry exists in this <see cref="InfractionLog"/> that satisfies the given predicate.
 			/// </summary>
 			/// <param name="where"></param>
 			/// <returns></returns>
-			public bool HasEntry(Predicate<InfractionLogEntry> where) => _Entries.Find(where) != null;
+			public bool HasEntry(Predicate<InfractionLogEntry> where) => Entries.Find(where) != null;
 
 			/// <summary>
 			/// Returns whether or not an entry exists at the given index.
 			/// </summary>
 			/// <param name="index"></param>
 			/// <returns></returns>
-			public bool HasEntry(int index) => _Entries.Count > index;
+			public bool HasEntry(int index) => Entries.Count > index;
 
 			/// <summary>
 			/// Returns the index of the given entry.
 			/// </summary>
 			/// <param name="entry"></param>
 			/// <returns></returns>
-			public int IndexOf(InfractionLogEntry entry) => _Entries.IndexOf(entry);
+			public int IndexOf(InfractionLogEntry entry) => Entries.IndexOf(entry);
 
 			/// <summary>
-			/// Updates this <see cref="_Entries"/> to mirror that of the main account's <see cref="_Entries"/> Throws <see cref="InvalidOperationException"/> if this is not an alt.
+			/// Updates this <see cref="Entries"/> to mirror that of the main account's <see cref="Entries"/> Throws <see cref="InvalidOperationException"/> if this is not an alt.
 			/// </summary>
 			private void CopyEntriesFromMain() => CopyEntriesFromMain(GetMainLog());
 
 			private void CopyEntriesFromMain(InfractionLog main) {
 				if (!IsAlt) throw new InvalidOperationException();
-				_Entries = main._Entries.ToArray().ToList(); //ToArrayToList clones it.
-				_Entries.Sort();
+				Entries = main.Entries.ToArray().ToList(); //ToArrayToList clones it.
+				Entries.Sort();
 			}
 
 			/// <summary>
@@ -573,10 +569,10 @@ namespace OldOriBot.Data.Persistence {
 
 			public void Write(BinaryWriter writer) {
 				if (ThisLogVersion == 1) {
-					//Member logFor = Creator.Context.Server.GetMemberAsync(UserID).GetAwaiter().GetResult();
-					//if (logFor != null) {
-					//	IsComplete = logFor.JoinedAt > LogSystemCreatedAt;
-					//}
+					Member logFor = Creator.Context.Server.GetMemberAsync(UserID).GetAwaiter().GetResult();
+					if (logFor != null) {
+						IsComplete = logFor.JoinedAt > LogSystemCreatedAt;
+					}
 				}
 
 				ThisLogVersion = CURRENT_LOG_VERSION;
@@ -589,7 +585,7 @@ namespace OldOriBot.Data.Persistence {
 				writer.Write(MainID ?? default);
 
 				if (!IsAlt) {
-					writer.WriteEntries(_Entries);
+					writer.WriteEntries(Entries);
 					writer.Write((ushort)KnownAltIDs.Count);
 					foreach (Snowflake sf in KnownAltIDs) writer.Write(sf);
 				} else {
@@ -615,7 +611,7 @@ namespace OldOriBot.Data.Persistence {
 				ThisLogVersion = version;
 
 				if (!IsAlt) {
-					_Entries = reader.ReadMetaEntries<InfractionLogEntry>(version).ToList();
+					Entries = reader.ReadMetaEntries<InfractionLogEntry>(version).ToList();
 					// ^ Metadata populates their version.
 
 					if (version == 1) {
@@ -648,12 +644,12 @@ namespace OldOriBot.Data.Persistence {
 
 				StringBuilder desc = new StringBuilder("**This is your reminder to pay mind to the index number (it starts from 0, and may skip up).**\n\n");
 				StringBuilder descNoReason = new StringBuilder("**List text is too long. This will not contain reasons. You must ask for a specific entry to view its reason.**\n\n");
-				_Entries.Sort((left, right) => {
+				Entries.Sort((left, right) => {
 					return left.Time.CompareTo(right.Time);
 				});
 
-				for (int idx = 0; idx < _Entries.Count; idx++) {
-					InfractionLogEntry entry = _Entries[idx];
+				for (int idx = 0; idx < Entries.Count; idx++) {
+					InfractionLogEntry entry = Entries[idx];
 					if (entry.Hidden && !showHidden) continue;
 
 					User mod = User.GetOrDownloadUserAsync(entry.ModeratorID).Result;
@@ -661,8 +657,8 @@ namespace OldOriBot.Data.Persistence {
 						nameLen = mod.FullName.Length;
 					}
 				}
-				for (int idx = 0; idx < _Entries.Count; idx++) {
-					InfractionLogEntry entry = _Entries[idx];
+				for (int idx = 0; idx < Entries.Count; idx++) {
+					InfractionLogEntry entry = Entries[idx];
 					if (entry.Hidden && !showHidden) continue;
 
 					string entryText = entry.ToString(this, idx, nameLen, true);

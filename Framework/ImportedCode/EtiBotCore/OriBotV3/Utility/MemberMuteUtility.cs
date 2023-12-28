@@ -96,12 +96,54 @@ namespace OldOriBot.Utility {
 			DiscordClient.Current.OnHeartbeat += Tick;
 		}
 
-		/// <summary>
-		/// Returns the cached display name of the given member's ID.
-		/// </summary>
-		/// <param name="id"></param>
-		/// <returns></returns>
-		public string GetCachedNameOf(Snowflake id) => Storage.GetValue("MUTE_NAME_CACHE_" + id);
+        public MemberMuteUtility(BotContext ctx)
+        {
+            Logger.Default.WriteLine("Made a new MemberMuteUtility " + ctx.ID, LogLevel.Trace);
+            Context = ctx;
+            IEnumerable<Role> r = Context.Server.Roles;
+            Muted = r.First(role => role.Name == "Muted"); // Yes, this will throw. I want that.
+            Cache[ctx.ID] = this;
+            Storage = DataPersistence.GetPersistence(ctx, "muteinfo.cfg");
+
+            List<ulong> alreadyParsedIds = new List<ulong>();
+            foreach (string key in Storage.Keys)
+            {
+                Match match = Regex.Match(key, @"\d+");
+                if (match.Success)
+                {
+                    string memId = match.Groups[0].Value;
+                    ulong id = ulong.Parse(memId);
+                    if (alreadyParsedIds.Contains(id))
+                    {
+                        continue;
+                    }
+                    alreadyParsedIds.Add(id);
+                }
+            }
+
+            foreach (ulong id in alreadyParsedIds)
+            {
+                long start = Storage.TryGetType($"MUTE_START_{id}", 0L);
+                long end = Storage.TryGetType($"MUTE_END_{id}", 0L);
+                MuteAtTimes[id] = DateTimeOffset.FromUnixTimeSeconds(start);
+                MuteRemovalTimes[id] = DateTimeOffset.FromUnixTimeSeconds(end);
+
+                Member mbr = Context.Server.GetMemberAsync(id).Result;
+                if (mbr != null && !mbr.LeftServer)
+                {
+                    Storage.SetValue("MUTE_NAME_CACHE_" + mbr.ID, mbr.FullName); // update
+                }
+            }
+
+            DiscordClient.Current.OnHeartbeat += Tick;
+        }
+
+        /// <summary>
+        /// Returns the cached display name of the given member's ID.
+        /// </summary>
+        /// <param name="id"></param>
+        /// <returns></returns>
+        public string GetCachedNameOf(Snowflake id) => Storage.GetValue("MUTE_NAME_CACHE_" + id);
 
 		private bool IsMemberHigherRankingOrEqualToSelf(Member mbr) {
 			if (mbr.LeftServer) return false;

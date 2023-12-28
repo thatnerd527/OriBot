@@ -9,13 +9,21 @@ using System.Threading.Tasks;
 using Discord;
 using Discord.Interactions;
 using Discord.WebSocket;
+
 using EtiBotCore.Data.Structs;
+
+using Microsoft.Extensions.Logging.Abstractions;
+
+using OldOriBot.Data;
 using OldOriBot.Data.Persistence;
+using OldOriBot.Utility;
+
 using OriBot;
 using OriBot.Commands;
 using OriBot.DB;
 using OriBot.EventHandlers;
 using OriBot.Framework;
+using OriBot.Framework.UserBehaviour;
 using OriBot.Framework.UserProfiles;
 using OriBot.PassiveHandlers;
 using OriBot.Storage;
@@ -87,6 +95,18 @@ namespace main
             }
         }
 
+        private static ulong IDGenerator(UserProfile profile)
+        {
+            if (profile.BehaviourLogs.Logs.Count == 0)
+            {
+                return 1;
+            }
+            else
+            {
+                return profile.BehaviourLogs.Logs.Select(x => x.ID).Max() + 1;
+            }
+        }
+
         public static void Login()
         {
             Logger.Info($"##############################");
@@ -95,22 +115,120 @@ namespace main
 
             string storage = UserProfile.BaseStorageDir;
             string database = Path.Combine(AppContext.BaseDirectory, "Data", "db.db");
-
+            InfractionLogProvider infractionLogProvider = new InfractionLogProvider(@"F:\visualstudio\OriBot\Infractions");
             List<UserProfile> profiles = Directory.EnumerateFiles(UserProfile.BaseStorageDir)
                 .Where(x => x.EndsWith(".json") || x.EndsWith(".profile"))
                 .Select(x => ulong.Parse(Path.GetFileNameWithoutExtension(x)))
                 .Select(x => ProfileManager.GetUserProfile(x))
                 .ToList();
 
-            InfractionLogProvider infractionLogProvider = new InfractionLogProvider(@"F:\visualstudio\OriBot\Infractions");
-            infractionLogProvider.AppendAlert(194108558177075201, new Snowflake(796156698506035201), "askdijadkaodk");
-            infractionLogProvider.AppendAlert(194108558177075201, new Snowflake(796156698506035201), "askdijadkaodk");
-            infractionLogProvider.AppendAlert(194108558177075201, new Snowflake(796156698506035201), "askdijadkaodk");
-            
-            foreach (var item in infractionLogProvider.GetAllLogs())
+            var botcontext = BotContextRegistry.GetContext(new Snowflake(577548441878790146));
+            var muteutil = MemberMuteUtility.GetOrCreate(botcontext);
+            foreach (var item in profiles)
             {
-                Logger.Info(item.UserID.ToString());
+                var logsfor = infractionLogProvider.For(new Snowflake(item.UserID)).Entries;
+
+                foreach (var item1 in logsfor)
+                {
+                    if (item1.Hidden)
+                    {
+                        //switch (item1.Type)
+                        //{
+                        //    case InfractionLogProvider.LogType.Note:
+                        //        {
+                        //            var logentry = UserBehaviourLogRegistry.CreateLogEntry<Modera>();
+                        //            logentry.ModeratorId = item1.ModeratorID.Value;
+                        //            logentry.Note = item1.Information;
+                        //            item.BehaviourLogs.AddLogEntry(logentry);
+                        //        }
+                        //        break;
+                        //}
+                        continue;
+                    }
+
+                    switch (item1.Type)
+                    {
+                        case InfractionLogProvider.LogType.Note:
+                            {
+                                var logentry = new ModeratorNoteLogEntry(IDGenerator(item),(ulong)item1.Time.ToUnixTimeMilliseconds(),item1.Information,item1.ModeratorID);
+
+                                item.BehaviourLogs.AddLogEntry(logentry);
+                            }
+                            break;
+                        case InfractionLogProvider.LogType.Unmute:
+                            {
+                                var logentry = new ModeratorUnmuteLogEntry(IDGenerator(item),(ulong)item1.Time.ToUnixTimeMilliseconds(),item1.Information,item1.ModeratorID);
+
+                                item.BehaviourLogs.AddLogEntry(logentry);
+                            }
+                            break;
+                        case InfractionLogProvider.LogType.Warning:
+                            {
+                                var logentry = new ModeratorWarnLogEntry(IDGenerator(item),(ulong)item1.Time.ToUnixTimeMilliseconds(),item1.Information,WarnType.Normal,item1.ModeratorID);
+
+                                item.BehaviourLogs.AddLogEntry(logentry);
+                            }
+                            break;
+                        case InfractionLogProvider.LogType.MinorWarning:
+                            {
+                                var logentry = new ModeratorWarnLogEntry(IDGenerator(item),(ulong)item1.Time.ToUnixTimeMilliseconds(),item1.Information,WarnType.Minor,item1.ModeratorID);
+
+                                item.BehaviourLogs.AddLogEntry(logentry);
+                            }
+                            break;
+                        case InfractionLogProvider.LogType.MajorWarning:
+                            {
+                                var logentry = new ModeratorWarnLogEntry(IDGenerator(item),(ulong)item1.Time.ToUnixTimeMilliseconds(),item1.Information,WarnType.Harsh,item1.ModeratorID);
+
+                                item.BehaviourLogs.AddLogEntry(logentry);
+                            }
+                            break;
+                        case InfractionLogProvider.LogType.Ban:
+                            {
+                                var logentry = new ModeratorBanLogEntry(IDGenerator(item), (ulong)item1.Time.ToUnixTimeMilliseconds(),item1.Information,item1.ModeratorID,0);
+
+                                item.BehaviourLogs.AddLogEntry(logentry);
+                            }
+                            break;
+                        case InfractionLogProvider.LogType.Pardon:
+                            {
+                                var logentry = new ModeratorUnbanLogEntry(IDGenerator(item),(ulong)item1.Time.ToUnixTimeMilliseconds(),item1.Information,item1.ModeratorID);
+
+                                item.BehaviourLogs.AddLogEntry(logentry);
+                            }
+                            break;
+                        case InfractionLogProvider.LogType.Mute:
+                            {
+                                
+                                var logentry = new ModeratorMuteLogEntry(IDGenerator(item),(ulong)item1.Time.ToUnixTimeMilliseconds(),item1.Information,item1.ModeratorID,"",DateTime.MinValue);
+                                
+                                item.BehaviourLogs.AddLogEntry(logentry);
+                            }
+                            break;
+
+                    }
+                }
+
+                if (muteutil.IsMutedInRegistry(new Snowflake(item.UserID)))
+                {
+                    var hasmutes = item.BehaviourLogs.Logs.Where(x => x is ModeratorMuteLogEntry).Any();
+
+                    if (hasmutes)
+                    {
+                        var lastitem = item.BehaviourLogs.Logs.Where(x => x is ModeratorMuteLogEntry).Last().Instantiate() as ModeratorMuteLogEntry;
+                        lastitem.MuteEndUTC = DateTime.UtcNow + muteutil.GetRemainingMuteTime(new Snowflake(item.UserID));
+                        item.BehaviourLogs.RemoveByID(lastitem.ID);
+                        item.BehaviourLogs.AddLogEntry(lastitem);
+                    }
+
+                    // @traso please handle this too, add some logic if the user is muted.
+
+                }
             }
+
+
+
+
 
             using var db = new SpiritContext(database);
             db.Database.EnsureDeleted();
