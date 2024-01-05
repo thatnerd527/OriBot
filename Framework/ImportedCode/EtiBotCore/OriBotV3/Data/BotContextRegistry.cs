@@ -18,7 +18,6 @@ namespace OldOriBot.Data {
 	/// </summary>
 	public static class BotContextRegistry {
 
-
 		private static Dictionary<Snowflake, BotContext> ContextRegistry = new Dictionary<Snowflake, BotContext>();
 
 		/// <summary>
@@ -29,9 +28,8 @@ namespace OldOriBot.Data {
 			Logger.Default.WriteLine("Initialized all BotContexts...");
 			ContextRegistry = new Dictionary<Snowflake, BotContext> {
 				//[763476814814511175] = new BotContextTestServer()
-				[577548441878790146] = new BotContextOriTheGame()
+				[1005355539447959552] = new BotContextOriTheGame()
 			};
-
 			DiscordClient.Current.Events.GuildEvents.OnGuildCreated += OnGuildCreated;
 		}
 

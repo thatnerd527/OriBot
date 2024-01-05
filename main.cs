@@ -10,11 +10,16 @@ using Discord;
 using Discord.Interactions;
 using Discord.WebSocket;
 
+using EtiBotCore.Client;
 using EtiBotCore.Data.Structs;
+using EtiBotCore.Payloads.Data;
 
 using Microsoft.Extensions.Logging.Abstractions;
 
+using Newtonsoft.Json.Linq;
+
 using OldOriBot.Data;
+using OldOriBot.Data.Commands;
 using OldOriBot.Data.Persistence;
 using OldOriBot.Utility;
 
@@ -38,7 +43,10 @@ namespace main
 
     internal class Program
     {
-        public static void Main(string[] args) => Login();
+        public static void Main(string[] args)
+        {
+            _ = new Program().MainAsync();
+        }
 
         private static DiscordSocketClient _client;
 
@@ -46,53 +54,12 @@ namespace main
 
         public async Task MainAsync()
         {
-            Logger.Cleanup(); // just in case the bot crashes or is forcefully shut off, this gets triggered
-            using var ct = new CancellationTokenSource();
-            var inputTask = ReadConsoleInputAsync(ct.Token);
-            await Task.WhenAny(inputTask);
-            ct.Cancel();
-            await inputTask.ContinueWith(_ => { });
-        }
-
-        private async Task ReadConsoleInputAsync(CancellationToken cancellationToken)
-        {
-            // TODO: may wanna fix this
-            var exit = "exit";
-            var help = "help";
-            var sel = 0;
-            while (!cancellationToken.IsCancellationRequested)
-            {
-                // Asynchronously read the next line from the console
-                var input = await Task.Run(Console.ReadLine);
-
-                if (input.ToLower() == exit)
-                {
-                    sel = 1;
-                }
-
-                if (input.ToLower() == help)
-                {
-                    sel = 2;
-                }
-
-                switch (sel)
-                {
-                    case 1:
-                        sel = 0;
-                        await Cleanup(0);
-                        break;
-
-                    case 2:
-                        Logger.Info("define help here please lol");
-                        sel = 0;
-                        break;
-
-                    default:
-                        Logger.Info("'" + input + "' is not reconized as an internal command. Try 'help' for more information.");
-                        sel = 0;
-                        break;
-                }
-            }
+            // just in case the bot crashes or is forcefully shut off, this gets triggered
+            
+            Task.Run(Login);
+            Thread.Sleep(int.MaxValue);
+           
+           
         }
 
         private static ulong IDGenerator(UserProfile profile)
@@ -107,7 +74,7 @@ namespace main
             }
         }
 
-        public static void Login()
+        public static async Task Login()
         {
             Logger.Info($"##############################");
             Logger.Info($"### Starting Oribot profile migrator v{Constants.OriBotVersion} ###");
@@ -121,8 +88,34 @@ namespace main
                 .Select(x => ulong.Parse(Path.GetFileNameWithoutExtension(x)))
                 .Select(x => ProfileManager.GetUserProfile(x))
                 .ToList();
+            DataPersistence.DoStaticInit();
+            await DiscordClient.Setup();
+            GatewayIntent intents =
+                GatewayIntent.DIRECT_MESSAGES |
+                GatewayIntent.GUILDS |
+                GatewayIntent.GUILD_PRESENCES |
+                GatewayIntent.GUILD_BANS |
+                GatewayIntent.GUILD_MEMBERS |
+                GatewayIntent.GUILD_MESSAGES |
+                GatewayIntent.GUILD_MESSAGE_REACTIONS |
+                GatewayIntent.GUILD_VOICE_STATES;
+            var token = File.ReadAllText("token.txt");
+            var discordclient = new DiscordClient(token, intents)
+            {
+                ReconnectOnFailure = true,
+                DevMode = false
+            };
+            BotContextRegistry.InitializeBotContexts();
 
-            var botcontext = BotContextRegistry.GetContext(new Snowflake(577548441878790146));
+
+            // what da bot gonna do fo today ####
+
+
+
+            await discordclient.ConnectAsync();
+            CommandMarshaller.Initialize();
+            await Task.Delay(10000);
+            var botcontext = BotContextRegistry.GetContext(new Snowflake(1005355539447959552));
             var muteutil = MemberMuteUtility.GetOrCreate(botcontext);
             foreach (var item in profiles)
             {

@@ -526,7 +526,7 @@ namespace EtiLogger.Logging {
 			/// <param name="italics">Whether or not to use italics for this text.</param>
 			/// <param name="strike">Whether or not to strikethrough this text.</param>
 			public MessageComponent(string text, Color? color = null, Color? backgroundColor = null, bool? bold = null, bool? underline = null, bool? italics = null, bool? strike = null) {
-				if (text.Contains("\u001b")) throw new ArgumentException("MessageComponent contained a VT sequence!");
+				//if (text.Contains("\u001b")) throw new ArgumentException("MessageComponent contained a VT sequence!");
 				Text = text;
 				Color = color;
 				BackgroundColor = backgroundColor;

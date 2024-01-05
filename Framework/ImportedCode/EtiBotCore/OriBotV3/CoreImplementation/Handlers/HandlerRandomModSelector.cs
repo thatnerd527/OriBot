@@ -24,7 +24,7 @@ namespace OldOriBot.CoreImplementation.Handlers {
 		public HandlerRandomModSelector(BotContext ctx) : base(ctx) {
 			AnyModRole = new ManagedRole(ctx.Server, "AnyMod");
 			DiscordClient.Current!.Events.PresenceEvents.OnPresenceUpdated += OnPresenceUpdated;
-			OnPresenceUpdated(null, null).Wait(); // Trigger a standard update. this has no async code so wait is OK
+			//OnPresenceUpdated(null, null).Wait(); // Trigger a standard update. this has no async code so wait is OK
 		}
 
 		private Task OnPresenceUpdated(Presence _, Presence np) {

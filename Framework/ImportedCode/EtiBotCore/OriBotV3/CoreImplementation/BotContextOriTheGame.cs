@@ -27,13 +27,13 @@ namespace OldOriBot.CoreImplementation {
 	public class BotContextOriTheGame : BotContext {
 		public override string Name { get; } = "Ori the Game Bot Context";
 		public override string DataPersistenceName { get; } = "ctxOri";
-		protected override Snowflake ServerID { get; } = 577548441878790146;
-		protected override Snowflake EventLogID { get; } = 622119204992057354;
-		protected override Snowflake MembershipLogID { get; } = 673409492460896296;
-		protected override Snowflake MessageBehaviorLogID { get; } = 798066373485658162;
-		protected override Snowflake VoiceBehaviorLogID { get; } = 798066188139102258;
-		protected override Snowflake ModerationLogID { get; } = 629740939992104970;
-		public override Snowflake? BotChannelID { get; } = 621800841871097866;
+		protected override Snowflake ServerID { get; } = 1005355539447959552;
+		protected override Snowflake EventLogID { get; } = 1138292105068949546;
+		protected override Snowflake MembershipLogID { get; } = 1138292105068949546;
+		protected override Snowflake MessageBehaviorLogID { get; } = 1138292105068949546;
+		protected override Snowflake VoiceBehaviorLogID { get; } = 1138292105068949546;
+		protected override Snowflake ModerationLogID { get; } = 1138292105068949546;
+		public override Snowflake? BotChannelID { get; } = 1189464958208065536;
 		public override bool OnlyAllowCommandsInBotChannel { get; } = true;
 		public override Command[] Commands { get; set; } = new Command[0];
 		public override PassiveHandler[] Handlers { get; set; } = new PassiveHandler[0];
