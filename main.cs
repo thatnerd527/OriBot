@@ -20,6 +20,7 @@ using Newtonsoft.Json.Linq;
 
 using OldOriBot.Data;
 using OldOriBot.Data.Commands;
+using OldOriBot.Data.Commands.ArgData;
 using OldOriBot.Data.Persistence;
 using OldOriBot.Utility;
 
@@ -55,11 +56,11 @@ namespace main
         public async Task MainAsync()
         {
             // just in case the bot crashes or is forcefully shut off, this gets triggered
-            
+
             Task.Run(Login);
             Thread.Sleep(int.MaxValue);
-           
-           
+
+
         }
 
         private static ulong IDGenerator(UserProfile profile)
@@ -82,7 +83,7 @@ namespace main
 
             string storage = UserProfile.BaseStorageDir;
             string database = Path.Combine(AppContext.BaseDirectory, "Data", "db.db");
-            InfractionLogProvider infractionLogProvider = new InfractionLogProvider(@"F:\visualstudio\OriBot\Infractions");
+            InfractionLogProvider infractionLogProvider = new InfractionLogProvider(@"D:\TRASO\Code\visual\C#\OribotMigration\bin\Debug\net8.0\Data\Infractions");
             List<UserProfile> profiles = Directory.EnumerateFiles(UserProfile.BaseStorageDir)
                 .Where(x => x.EndsWith(".json") || x.EndsWith(".profile"))
                 .Select(x => ulong.Parse(Path.GetFileNameWithoutExtension(x)))
@@ -114,7 +115,7 @@ namespace main
 
             await discordclient.ConnectAsync();
             CommandMarshaller.Initialize();
-            await Task.Delay(10000);
+            await Task.Delay(15000);
             var botcontext = BotContextRegistry.GetContext(new Snowflake(1005355539447959552));
             var muteutil = MemberMuteUtility.GetOrCreate(botcontext);
             foreach (var item in profiles)
@@ -142,62 +143,62 @@ namespace main
                     switch (item1.Type)
                     {
                         case InfractionLogProvider.LogType.Note:
-                            {
-                                var logentry = new ModeratorNoteLogEntry(IDGenerator(item),(ulong)item1.Time.ToUnixTimeMilliseconds(),item1.Information,item1.ModeratorID);
+                        {
+                            var logentry = new ModeratorNoteLogEntry(IDGenerator(item), (ulong)item1.Time.ToUnixTimeMilliseconds(), item1.Information, item1.ModeratorID);
 
-                                item.BehaviourLogs.AddLogEntry(logentry);
-                            }
-                            break;
+                            item.BehaviourLogs.AddLogEntry(logentry);
+                        }
+                        break;
                         case InfractionLogProvider.LogType.Unmute:
-                            {
-                                var logentry = new ModeratorUnmuteLogEntry(IDGenerator(item),(ulong)item1.Time.ToUnixTimeMilliseconds(),item1.Information,item1.ModeratorID);
+                        {
+                            var logentry = new ModeratorUnmuteLogEntry(IDGenerator(item), (ulong)item1.Time.ToUnixTimeMilliseconds(), item1.Information, item1.ModeratorID);
 
-                                item.BehaviourLogs.AddLogEntry(logentry);
-                            }
-                            break;
+                            item.BehaviourLogs.AddLogEntry(logentry);
+                        }
+                        break;
                         case InfractionLogProvider.LogType.Warning:
-                            {
-                                var logentry = new ModeratorWarnLogEntry(IDGenerator(item),(ulong)item1.Time.ToUnixTimeMilliseconds(),item1.Information,WarnType.Normal,item1.ModeratorID);
+                        {
+                            var logentry = new ModeratorWarnLogEntry(IDGenerator(item), (ulong)item1.Time.ToUnixTimeMilliseconds(), item1.Information, WarnType.Normal, item1.ModeratorID);
 
-                                item.BehaviourLogs.AddLogEntry(logentry);
-                            }
-                            break;
+                            item.BehaviourLogs.AddLogEntry(logentry);
+                        }
+                        break;
                         case InfractionLogProvider.LogType.MinorWarning:
-                            {
-                                var logentry = new ModeratorWarnLogEntry(IDGenerator(item),(ulong)item1.Time.ToUnixTimeMilliseconds(),item1.Information,WarnType.Minor,item1.ModeratorID);
+                        {
+                            var logentry = new ModeratorWarnLogEntry(IDGenerator(item), (ulong)item1.Time.ToUnixTimeMilliseconds(), item1.Information, WarnType.Minor, item1.ModeratorID);
 
-                                item.BehaviourLogs.AddLogEntry(logentry);
-                            }
-                            break;
+                            item.BehaviourLogs.AddLogEntry(logentry);
+                        }
+                        break;
                         case InfractionLogProvider.LogType.MajorWarning:
-                            {
-                                var logentry = new ModeratorWarnLogEntry(IDGenerator(item),(ulong)item1.Time.ToUnixTimeMilliseconds(),item1.Information,WarnType.Harsh,item1.ModeratorID);
+                        {
+                            var logentry = new ModeratorWarnLogEntry(IDGenerator(item), (ulong)item1.Time.ToUnixTimeMilliseconds(), item1.Information, WarnType.Harsh, item1.ModeratorID);
 
-                                item.BehaviourLogs.AddLogEntry(logentry);
-                            }
-                            break;
+                            item.BehaviourLogs.AddLogEntry(logentry);
+                        }
+                        break;
                         case InfractionLogProvider.LogType.Ban:
-                            {
-                                var logentry = new ModeratorBanLogEntry(IDGenerator(item), (ulong)item1.Time.ToUnixTimeMilliseconds(),item1.Information,item1.ModeratorID,0);
+                        {
+                            var logentry = new ModeratorBanLogEntry(IDGenerator(item), (ulong)item1.Time.ToUnixTimeMilliseconds(), item1.Information, item1.ModeratorID, 0);
 
-                                item.BehaviourLogs.AddLogEntry(logentry);
-                            }
-                            break;
+                            item.BehaviourLogs.AddLogEntry(logentry);
+                        }
+                        break;
                         case InfractionLogProvider.LogType.Pardon:
-                            {
-                                var logentry = new ModeratorUnbanLogEntry(IDGenerator(item),(ulong)item1.Time.ToUnixTimeMilliseconds(),item1.Information,item1.ModeratorID);
+                        {
+                            var logentry = new ModeratorUnbanLogEntry(IDGenerator(item), (ulong)item1.Time.ToUnixTimeMilliseconds(), item1.Information, item1.ModeratorID);
 
-                                item.BehaviourLogs.AddLogEntry(logentry);
-                            }
-                            break;
+                            item.BehaviourLogs.AddLogEntry(logentry);
+                        }
+                        break;
                         case InfractionLogProvider.LogType.Mute:
-                            {
-                                
-                                var logentry = new ModeratorMuteLogEntry(IDGenerator(item),(ulong)item1.Time.ToUnixTimeMilliseconds(),item1.Information,item1.ModeratorID,"",DateTime.MinValue);
-                                
-                                item.BehaviourLogs.AddLogEntry(logentry);
-                            }
-                            break;
+                        {
+
+                            var logentry = new ModeratorMuteLogEntry(IDGenerator(item), (ulong)item1.Time.ToUnixTimeMilliseconds(), item1.Information, item1.ModeratorID, "", DateTime.MinValue);
+
+                            item.BehaviourLogs.AddLogEntry(logentry);
+                        }
+                        break;
 
                     }
                 }
@@ -259,8 +260,98 @@ namespace main
                     db.UserBadges.Add(dbUserBadge);
                 }
             }
+            db.SaveChanges();
+            foreach (UserProfile profile in profiles)
+            {
+                foreach (UserBehaviourLogEntry log in profile.BehaviourLogs.Logs)
+                {
+                    if (log is ModeratorNoteLogEntry note)
+                    {
+                        User dbUserP = db.Users.Single(u => u.UserId == profile.UserID);
+                        User dbUserI = db.Users.Single(u => u.UserId == note.ModeratorId);
 
-            // put the code for infractions here, once we figure it out lmao
+                        Punishment dbNote = new()
+                        {
+                            Type = PunishmentType.Note,
+                            Reason = note.Note,
+                            Issued = DateTimeOffset.FromUnixTimeMilliseconds((long)note.TimestampUTC).DateTime,
+                            Expiry = null,
+                            CheckForExpiry = false,
+                            Punished = dbUserP,
+                            Issuer = dbUserI
+                        };
+
+                        db.Punishments.Add(dbNote);
+                    }
+                    else if (log is ModeratorUnmuteLogEntry unmute)
+                    {
+                        Punishment dbUnmute = db.Punishments.Where(p => p.Type == PunishmentType.Mute).OrderByDescending(p => p.Issued).First();
+
+                        dbUnmute.Reason += $" (This mute was removed for the following reason: {unmute.Reason})";
+                    }
+                    else if (log is ModeratorWarnLogEntry warn)
+                    {
+                        User dbUserP = db.Users.Single(u => u.UserId == profile.UserID);
+                        User dbUserI = db.Users.Single(u => u.UserId == warn.ModeratorId);
+
+                        Punishment dbWarn = new()
+                        {
+                            Type = PunishmentType.Warn,
+                            Reason = warn.Reason,
+                            Issued = DateTimeOffset.FromUnixTimeMilliseconds((long)warn.TimestampUTC).DateTime,
+                            Expiry = null,
+                            CheckForExpiry = false,
+                            Punished = dbUserP,
+                            Issuer = dbUserI
+                        };
+
+                        db.Punishments.Add(dbWarn);
+                    }
+                    else if (log is ModeratorBanLogEntry ban)
+                    {
+                        User dbUserP = db.Users.Single(u => u.UserId == profile.UserID);
+                        User dbUserI = db.Users.Single(u => u.UserId == ban.ModeratorId);
+
+                        Punishment dbBan = new()
+                        {
+                            Type = PunishmentType.Ban,
+                            Reason = ban.Reason,
+                            Issued = DateTimeOffset.FromUnixTimeMilliseconds((long)ban.TimestampUTC).DateTime,
+                            Expiry = null,
+                            CheckForExpiry = false,
+                            Punished = dbUserP,
+                            Issuer = dbUserI
+                        };
+
+                        db.Punishments.Add(dbBan);
+                    }
+                    else if (log is ModeratorUnbanLogEntry unban)
+                    {
+                        Punishment dbUnban = db.Punishments.Where(p => p.Type == PunishmentType.Ban).OrderByDescending(p => p.Issued).First();
+
+                        dbUnban.Reason += $" (This ban was removed for the following reason: {unban.Reason})";
+                    }
+                    else if (log is ModeratorMuteLogEntry mute)
+                    {
+                        User dbUserP = db.Users.Single(u => u.UserId == profile.UserID);
+                        User dbUserI = db.Users.Single(u => u.UserId == mute.ModeratorId);
+
+                        Punishment dbMute = new()
+                        {
+                            Type = PunishmentType.Ban,
+                            Reason = mute.Reason,
+                            Issued = DateTimeOffset.FromUnixTimeMilliseconds((long)mute.TimestampUTC).DateTime,
+                            Expiry = mute.MuteEndUTC,
+                            CheckForExpiry = false,
+                            Punished = dbUserP,
+                            Issuer = dbUserI
+                        };
+
+                        db.Punishments.Add(dbMute);
+                    }
+                }
+            }
+            db.SaveChanges();
         }
 
         private void RegisterSlashCommands()

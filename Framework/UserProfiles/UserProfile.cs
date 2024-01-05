@@ -96,18 +96,22 @@ namespace OriBot.Framework.UserProfiles
         public bool IsMuted => _MutedTimerID != "";
 
         [JsonIgnore]
-        public string MutedTimerID {
+        public string MutedTimerID
+        {
             get => _MutedTimerID;
-            set {
+            set
+            {
                 _MutedTimerID = value;
                 Save();
             }
         }
 
         [JsonIgnore]
-        public bool IsBanned {
+        public bool IsBanned
+        {
             get => _IsBanned;
-            set {
+            set
+            {
                 _IsBanned = value;
                 Save();
             }
@@ -166,7 +170,7 @@ namespace OriBot.Framework.UserProfiles
                 {
                     _ProfileConfig = ProfileConfigs.Load(null, () =>
                     {
-                        Save();
+                        //Save();
                     });
                 }
                 return _ProfileConfig;
@@ -187,7 +191,7 @@ namespace OriBot.Framework.UserProfiles
                 {
                     _PerGuildDataContainer = PerGuildDataContainer.Load(null, () =>
                     {
-                        Save();
+                        //Save();
                     });
                     Save();
                 }
@@ -209,7 +213,7 @@ namespace OriBot.Framework.UserProfiles
                 {
                     _BehaviourLogs = UserBehaviourLogContainer.Load(null, () =>
                     {
-                        Save();
+                        //Save();
                     });
                     Save();
                 }
@@ -231,7 +235,7 @@ namespace OriBot.Framework.UserProfiles
                 {
                     _DiagnosticLogs = DiagnosticLogContainer.Load(null, () =>
                     {
-                        Save();
+                        //Save();
                     });
                     Save();
                 }
@@ -251,8 +255,9 @@ namespace OriBot.Framework.UserProfiles
             {
                 if (_TicketManager == null)
                 {
-                    _TicketManager = new TicketManager(() => {
-                        Save();
+                    _TicketManager = new TicketManager(() =>
+                    {
+                        //Save();
                     });
                     Save();
                 }
@@ -424,7 +429,7 @@ namespace OriBot.Framework.UserProfiles
             {
                 ProfileConfig = ProfileConfigs.Load(value, () =>
                 {
-                    Save();
+                    //Save();
                 });
             }
         }
@@ -439,7 +444,9 @@ namespace OriBot.Framework.UserProfiles
 
             set
             {
-                PerGuildData = PerGuildDataContainer.Load(value, () => { Save(); });
+                PerGuildData = PerGuildDataContainer.Load(value, () =>
+                { //Save();
+                });
             }
         }
 
@@ -453,7 +460,10 @@ namespace OriBot.Framework.UserProfiles
 
             set
             {
-                BehaviourLogs = UserBehaviourLogContainer.Load(value, () => { Save(); });
+                BehaviourLogs = UserBehaviourLogContainer.Load(value, () =>
+                {
+                    //Save(); 
+                });
             }
         }
 
@@ -467,7 +477,10 @@ namespace OriBot.Framework.UserProfiles
 
             set
             {
-                DiagnosticLogs = DiagnosticLogContainer.Load(value, () => { Save(); });
+                DiagnosticLogs = DiagnosticLogContainer.Load(value, () =>
+                {
+                    //Save();
+                });
             }
         }
 
@@ -481,7 +494,10 @@ namespace OriBot.Framework.UserProfiles
 
             set
             {
-                TicketManager = TicketManager.Load(() => { Save(); }, value);
+                TicketManager = TicketManager.Load(() =>
+                {
+                    //Save();
+                }, value);
             }
         }
 
@@ -543,7 +559,8 @@ namespace OriBot.Framework.UserProfiles
 
             } */
             Dictionary<ulong, PermissionLevel> permissionoverrides = Config.properties["permissionoverride"].ToObject<Dictionary<ulong, PermissionLevel>>();
-            if (permissionoverrides.ContainsKey(UserID)) {
+            if (permissionoverrides.ContainsKey(UserID))
+            {
                 return permissionoverrides[UserID];
             }
             if (!PerGuildData[serverid].Config.ContainsKey("PermissionLevel"))
@@ -652,14 +669,14 @@ namespace OriBot.Framework.UserProfiles
                         Badge existing = GetBadgeFromData(badge);
                         existing.Level++;
                     }
-                    Save();
+                    //Save();
                     return badge;
                 }
             }
             BadgesInternal.Add(badge);
 
             // Save when this happens
-            Save();
+            //Save();
 
             return badge;
         }
@@ -793,7 +810,7 @@ namespace OriBot.Framework.UserProfiles
                     tempprofile.GrantBadge(BadgeRegistry.GetBadgeFromPredefinedRegistry(item.Name));
                 };
             }
-            
+
 
             foreach (var item in oldprofile.UserData.Keys)
             {
