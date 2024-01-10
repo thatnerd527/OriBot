@@ -250,6 +250,10 @@ namespace OriBot.Framework.UserProfiles.Badges
             customData = CustomData;
         }
 
+        public int BadgeHash => $"{Name}{Description}{MiniDescription}{Icon}{Level}{ExperienceWorth}{customData}".GetHashCode();
+
+        public int BadgeHashWithoutLevel => $"{Name}{Description}{MiniDescription}{Icon}{ExperienceWorth}{customData}".GetHashCode();
+
         [JsonConstructor]
         public Badge()
         {
@@ -373,6 +377,7 @@ namespace OriBot.Framework.UserProfiles.Badges
 
         public ApprovedIdeaBadge(string name, string description, string minidesc = null, string icon = ":question:", ushort level = 1, double experience = 0, string customData = "") : base(name, description, minidesc, icon, level, experience, customData)
         {
+            idea = customData;
         }
 
         public new ApprovedIdeaBadge Load(string jsonobject)

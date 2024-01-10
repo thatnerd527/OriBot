@@ -658,7 +658,8 @@ namespace OriBot.Framework.UserProfiles
             
             if (badge == null) throw new ArgumentNullException("badge");
             badge = badge.Instantiate(badge.customData);
-            if (BadgesInternal.Contains(badge))
+            var targetsearch = BadgesInternal.FirstOrDefault(x => x.BadgeHashWithoutLevel == badge.BadgeHashWithoutLevel);
+            if (targetsearch != null)
             {
                 if (replaceIfAlreadyExists)
                 {
@@ -708,7 +709,7 @@ namespace OriBot.Framework.UserProfiles
         public bool HasBadge(Badge badge)
         {
             if (badge == null) throw new ArgumentNullException("badge");
-            return BadgesInternal.Contains(badge);
+            return BadgesInternal.Any(x => x.BadgeHashWithoutLevel == badge.BadgeHashWithoutLevel);
         }
 
         /// <summary>
@@ -722,7 +723,7 @@ namespace OriBot.Framework.UserProfiles
             if (!HasBadge(badge)) return null;
             foreach (Badge eBadge in BadgesInternal)
             {
-                if (eBadge == badge)
+                if (eBadge.BadgeHashWithoutLevel == badge.BadgeHashWithoutLevel)
                 {
                     return eBadge;
                 }
@@ -738,9 +739,9 @@ namespace OriBot.Framework.UserProfiles
         /// </summary>
         public void Save()
         {
-            var serialized = JsonConvert.SerializeObject(this, Formatting.None);
-            ProfileManager.RemoveFrom(UserID);
-            File.WriteAllText(CurrentFileName, serialized);
+            //var serialized = JsonConvert.SerializeObject(this, Formatting.None);
+            //ProfileManager.RemoveFrom(UserID);
+            //File.WriteAllText(CurrentFileName, serialized);
         }
 
         /// <summary>
@@ -769,8 +770,8 @@ namespace OriBot.Framework.UserProfiles
             else if (File.Exists(tempprofile.LegacyFileName))
             {
                 var userprof = MigrateUserProfile(userid, tempprofile);
-                userprof.Save();
-                File.Move(userprof.LegacyFileName, Path.Combine(UserProfile.BaseStorageDir, Path.GetFileNameWithoutExtension(userprof.CurrentFileName) + ".profile.backup"));
+               // userprof.Save();
+                //File.Move(userprof.LegacyFileName, Path.Combine(UserProfile.BaseStorageDir, Path.GetFileNameWithoutExtension(userprof.CurrentFileName) + ".profile.backup"));
                 return userprof;
             }
             else
@@ -797,7 +798,10 @@ namespace OriBot.Framework.UserProfiles
             tempprofile.Title = oldprofile.Title;
             tempprofile.Description = oldprofile.Description;
             // Conversion pt2
-
+            if (oldprofile.ID == 334743203603283969)
+            {
+                Debugger.Break();
+            }
             foreach (var item in oldprofile.Badges)
             {
                 if (item.Name == "Approved Idea")
@@ -809,7 +813,7 @@ namespace OriBot.Framework.UserProfiles
                         spliced = description.Split($"Feature: ");
                     }
                     var idea = spliced[1];
-                    tempprofile.GrantBadge(BadgeRegistry.GetBadgeFromPredefinedRegistry(item.Name, idea));
+                    tempprofile.GrantBadge(BadgeRegistry.GetBadgeFromPredefinedRegistry("Approved Idea", idea));
                 }
                 else
                 {
@@ -818,10 +822,12 @@ namespace OriBot.Framework.UserProfiles
                     {
                         Console.WriteLine("Badge not found: " + item.Name + ", auto creating.");
                         Badge created = new Badge(item.Name, item.Description, item.MiniDescription, item.Icon, item.Level, item.ExperienceWorth, "");
+                        BadgeRegistry.AddToRegistry(created);
                         tempprofile.GrantBadge(created);
                     } else
                     {
-                        tempprofile.GrantBadge(tempbadge);
+                        tempbadge.Level = item.Level;
+                        tempprofile.GrantBadge(tempbadge,true);
                     }
                     
                 };

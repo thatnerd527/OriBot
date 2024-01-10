@@ -32,6 +32,7 @@ using OriBot.EventHandlers;
 using OriBot.Framework;
 using OriBot.Framework.UserBehaviour;
 using OriBot.Framework.UserProfiles;
+using OriBot.Framework.UserProfiles.Badges;
 using OriBot.PassiveHandlers;
 using OriBot.Storage;
 using OriBot.Utilities;
@@ -256,46 +257,76 @@ namespace main
                 db.Users.Add(dbUser);
 
 
-                if (profile.UserID == 334743203603283969)
-                    Debugger.Break();
+                //if (profile.UserID == 334743203603283969)
+                //    Debugger.Break();
 
                 foreach (OriBot.Framework.UserProfiles.Badges.Badge badge in profile.Badges)
                 {
-                    if (!db.Badges.Any(b => b.Name == badge.Name))
+                    if (badge.Name == "Approved Idea")
                     {
-                        var dbBadgeNew = new Badge
+                        var approved = new ApprovedIdeaBadge("Approved Idea","","Professional Thinker",":bulb:",1,2000,badge.customData);
+                        var dbBadgeNew = new OriBot.DB.Badge
                         {
                             Name = badge.Name,
-                            Description = badge.Description,
+                            Description = approved.Description,
                             Emote = badge.Icon,
                             Experience = (int)badge.ExperienceWorth
                         };
 
                         db.Badges.Add(dbBadgeNew);
                         db.SaveChanges();
-                    }
 
-                    Badge dbBadge = db.Badges.First(b => b.Name == badge.Name);
+                        UserBadge dbUserBadgeNew = new UserBadge
+                        {
+                            User = dbUser,
+                            Badge = dbBadgeNew,
+                            Count = badge.Level
+                        };
 
-                    var dbUserBadge = db.UserBadges.FirstOrDefault(ub => ub.UserId == profile.UserID && ub.BadgeId == dbBadge.BadgeId);
-
-                    if (dbUserBadge != null)
-                    {
-                        //Debugger.Break();
-                        dbUserBadge.Count += badge.Level;
+                        db.UserBadges.Add(dbUserBadgeNew);
                         db.SaveChanges();
-                        continue;
+                    } else
+                    if (!db.Badges.Any(b => b.Name == badge.Name))
+                    {
+                        
+                            var dbBadgeNew = new OriBot.DB.Badge
+                            {
+                                Name = badge.Name,
+                                Description = badge.Description,
+                                Emote = badge.Icon,
+                                Experience = (int)badge.ExperienceWorth
+                            };
+
+                            db.Badges.Add(dbBadgeNew);
+                            db.SaveChanges();
+                        
+                        
                     }
 
-                    UserBadge dbUserBadgeNew = new UserBadge
+                    if (badge.Name != "Approved Idea")
                     {
-                        User = dbUser,
-                        Badge = dbBadge,
-                        Count = badge.Level
-                    };
+                        OriBot.DB.Badge dbBadge = db.Badges.First(b => b.Name == badge.Name);
 
-                    db.UserBadges.Add(dbUserBadgeNew);
-                    db.SaveChanges();
+                        var dbUserBadge = db.UserBadges.FirstOrDefault(ub => ub.UserId == profile.UserID && ub.BadgeId == dbBadge.BadgeId);
+
+                        if (dbUserBadge != null)
+                        {
+                            //Debugger.Break();
+                            dbUserBadge.Count += badge.Level;
+                            db.SaveChanges();
+                            continue;
+                        }
+
+                        UserBadge dbUserBadgeNew = new UserBadge
+                        {
+                            User = dbUser,
+                            Badge = dbBadge,
+                            Count = badge.Level
+                        };
+
+                        db.UserBadges.Add(dbUserBadgeNew);
+                        db.SaveChanges();
+                    }
 
                 }
             }
@@ -409,7 +440,7 @@ namespace main
                     db.SaveChanges();
                 }
             }
-            //db.SaveChanges();
+            db.SaveChanges();
         }
 
         private void RegisterSlashCommands()
