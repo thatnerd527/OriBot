@@ -84,9 +84,10 @@ public class Badge
 {
     public int BadgeId { get; set; }
 
-    public required string BadgeName { get; set; }
-    public required string BadgeDescription { get; set; }
-    public required string BadgeEmote { get; set; }
+    public required string Name { get; set; }
+    public required string Description { get; set; }
+    public required string Emote { get; set; }
+    public required int Experience { get; set; }
 
     public List<UserBadge> UserBadges { get; set; }
     public List<User> Users { get; set; }

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -115,9 +116,10 @@ namespace main
 
             await discordclient.ConnectAsync();
             CommandMarshaller.Initialize();
-            while ((await DiscordClient.Current.Events.GuildEvents.OnGuildCreated.Wait()).ID != 1005355539447959552) { } 
+            while ((await DiscordClient.Current.Events.GuildEvents.OnGuildCreated.Wait()).ID != 1005355539447959552) { }
             var botcontext = BotContextRegistry.GetContext(new Snowflake(1005355539447959552));
             var muteutil = MemberMuteUtility.GetOrCreate(botcontext);
+            infractionLogProvider.Context = botcontext;
             foreach (var item in profiles)
             {
                 var logsfor = infractionLogProvider.For(new Snowflake(item.UserID)).Entries;
@@ -228,41 +230,80 @@ namespace main
             db.Database.EnsureDeleted();
             db.Database.EnsureCreated();
 
+            //foreach (OriBot.Framework.UserProfiles.Badges.Badge badge in OriBot.Framework.UserProfiles.Badges.BadgeRegistry.AllBadges)
+            //{
+
+            //    var dbBadge = new Badge
+            //    {
+            //        BadgeName = badge.Name,
+            //        BadgeDescription = badge.Description,
+            //        BadgeEmote = badge.Icon
+            //    };
+
+            //    db.Badges.Add(dbBadge);
+
+            //}
+
+            db.SaveChanges();
+            int count = 0;
             foreach (UserProfile profile in profiles)
             {
+                Console.WriteLine($"Working with user number: {count++}");
                 User dbUser = new User
                 {
                     UserId = profile.UserID
                 };
                 db.Users.Add(dbUser);
 
+
+                if (profile.UserID == 334743203603283969)
+                    Debugger.Break();
+
                 foreach (OriBot.Framework.UserProfiles.Badges.Badge badge in profile.Badges)
                 {
-                    Badge dbBadge = db.Badges.FirstOrDefault(b => b.BadgeName == badge.Name);
-                    if (dbBadge is null)
+                    if (!db.Badges.Any(b => b.Name == badge.Name))
                     {
-                        dbBadge = new Badge
+                        var dbBadgeNew = new Badge
                         {
-                            BadgeName = badge.Name,
-                            BadgeDescription = badge.Description,
-                            BadgeEmote = badge.Icon
+                            Name = badge.Name,
+                            Description = badge.Description,
+                            Emote = badge.Icon,
+                            Experience = (int)badge.ExperienceWorth
                         };
 
-                        db.Badges.Add(dbBadge);
+                        db.Badges.Add(dbBadgeNew);
+                        db.SaveChanges();
                     }
 
-                    UserBadge dbUserBadge = new UserBadge
+                    Badge dbBadge = db.Badges.First(b => b.Name == badge.Name);
+
+                    var dbUserBadge = db.UserBadges.FirstOrDefault(ub => ub.UserId == profile.UserID && ub.BadgeId == dbBadge.BadgeId);
+
+                    if (dbUserBadge != null)
+                    {
+                        //Debugger.Break();
+                        dbUserBadge.Count += badge.Level;
+                        db.SaveChanges();
+                        continue;
+                    }
+
+                    UserBadge dbUserBadgeNew = new UserBadge
                     {
                         User = dbUser,
                         Badge = dbBadge,
                         Count = badge.Level
                     };
-                    db.UserBadges.Add(dbUserBadge);
+
+                    db.UserBadges.Add(dbUserBadgeNew);
+                    db.SaveChanges();
+
                 }
             }
-            db.SaveChanges();
+
+            count = 0;
             foreach (UserProfile profile in profiles)
             {
+                Console.WriteLine($"Working with user number: {count++}");
                 foreach (UserBehaviourLogEntry log in profile.BehaviourLogs.Logs)
                 {
                     if (log is ModeratorNoteLogEntry note)
@@ -285,9 +326,14 @@ namespace main
                     }
                     else if (log is ModeratorUnmuteLogEntry unmute)
                     {
-                        Punishment dbUnmute = db.Punishments.Where(p => p.Type == PunishmentType.Mute).OrderByDescending(p => p.Issued).First();
+                        Punishment? dbUnmute = db.Punishments.Where(p => p.Type == PunishmentType.Mute && p.PunishedId == profile.UserID).OrderByDescending(p => p.Issued).FirstOrDefault();
 
-                        dbUnmute.Reason += $" (This mute was removed for the following reason: {unmute.Reason})";
+                        if (dbUnmute is not null)
+                        {
+                            dbUnmute.Reason += $" (This mute was removed for the following reason: {unmute.Reason})";
+                            db.SaveChanges();
+                        }
+
                     }
                     else if (log is ModeratorWarnLogEntry warn)
                     {
@@ -309,8 +355,15 @@ namespace main
                     }
                     else if (log is ModeratorBanLogEntry ban)
                     {
+                        ulong mod;
+
+                        if (ban.ModeratorId == 1175162201267503104)
+                            mod = 194108558177075201;
+                        else
+                            mod = ban.ModeratorId;
+
                         User dbUserP = db.Users.Single(u => u.UserId == profile.UserID);
-                        User dbUserI = db.Users.Single(u => u.UserId == ban.ModeratorId);
+                        User dbUserI = db.Users.Single(u => u.UserId == mod);
 
                         Punishment dbBan = new()
                         {
@@ -327,9 +380,13 @@ namespace main
                     }
                     else if (log is ModeratorUnbanLogEntry unban)
                     {
-                        Punishment dbUnban = db.Punishments.Where(p => p.Type == PunishmentType.Ban).OrderByDescending(p => p.Issued).First();
+                        Punishment? dbUnban = db.Punishments.Where(p => p.Type == PunishmentType.Ban && p.PunishedId == profile.UserID).OrderByDescending(p => p.Issued).FirstOrDefault();
 
-                        dbUnban.Reason += $" (This ban was removed for the following reason: {unban.Reason})";
+                        if (dbUnban is not null)
+                        {
+                            dbUnban.Reason += $" (This ban was removed for the following reason: {unban.Reason})";
+                            db.SaveChanges();
+                        }
                     }
                     else if (log is ModeratorMuteLogEntry mute)
                     {
@@ -338,7 +395,7 @@ namespace main
 
                         Punishment dbMute = new()
                         {
-                            Type = PunishmentType.Ban,
+                            Type = PunishmentType.Mute,
                             Reason = mute.Reason,
                             Issued = DateTimeOffset.FromUnixTimeMilliseconds((long)mute.TimestampUTC).DateTime,
                             Expiry = mute.MuteEndUTC,
@@ -349,9 +406,10 @@ namespace main
 
                         db.Punishments.Add(dbMute);
                     }
+                    db.SaveChanges();
                 }
             }
-            db.SaveChanges();
+            //db.SaveChanges();
         }
 
         private void RegisterSlashCommands()

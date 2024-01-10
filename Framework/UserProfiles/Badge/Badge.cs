@@ -134,6 +134,11 @@ namespace OriBot.Framework.UserProfiles.Badges
         public static Badge LoadBadgeFromString(string jsonstring)
         {
             var loaded = JsonConvert.DeserializeObject<Badge>(jsonstring);
+            InitializeBadgeRegistry();
+            if (!BadgeCache.Exists(badge => loaded.Name.Equals(badge.Name)))
+            {
+                AddToRegistry(loaded);
+            }
             foreach (Badge badge in AllBadges)
             {
                 if (badge.Name.ToLower() == loaded.Name.ToLower())
