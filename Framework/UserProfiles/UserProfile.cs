@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -654,6 +655,7 @@ namespace OriBot.Framework.UserProfiles
         /// <exception cref="ArgumentNullException"></exception>
         public Badge GrantBadge(Badge badge, bool upgradeIfAlreadyExists = false, bool replaceIfAlreadyExists = false)
         {
+            
             if (badge == null) throw new ArgumentNullException("badge");
             badge = badge.Instantiate(badge.customData);
             if (BadgesInternal.Contains(badge))
@@ -791,7 +793,7 @@ namespace OriBot.Framework.UserProfiles
             var file = File.ReadAllBytes(tempprofile.LegacyFileName);
             var oldprofile = OldOriBot.UserProfiles.UserProfile.GetOrCreateProfileOf2(userid, file);
             tempprofile._MessagesSent = oldprofile.MessagesSent;
-            tempprofile.Color = (uint)oldprofile.Color;
+            tempprofile.Color = (uint)(oldprofile.Color == null ? 0 : oldprofile.Color);
             tempprofile.Title = oldprofile.Title;
             tempprofile.Description = oldprofile.Description;
             // Conversion pt2
@@ -801,13 +803,27 @@ namespace OriBot.Framework.UserProfiles
                 if (item.Name == "Approved Idea")
                 {
                     var description = item.Description;
-                    var spliced = description.Split($"I suggested something for the bot that ended up getting added as a full feature!\n\n**Feature:** ");
+                    var spliced = description.Split($"**Feature:** ");
+                    if (spliced.Length == 1)
+                    {
+                        spliced = description.Split($"Feature: ");
+                    }
                     var idea = spliced[1];
                     tempprofile.GrantBadge(BadgeRegistry.GetBadgeFromPredefinedRegistry(item.Name, idea));
                 }
                 else
                 {
-                    tempprofile.GrantBadge(BadgeRegistry.GetBadgeFromPredefinedRegistry(item.Name));
+                    var tempbadge = BadgeRegistry.GetBadgeFromPredefinedRegistry(item.Name);
+                    if (tempbadge == null)
+                    {
+                        Console.WriteLine("Badge not found: " + item.Name + ", auto creating.");
+                        Badge created = new Badge(item.Name, item.Description, item.MiniDescription, item.Icon, item.Level, item.ExperienceWorth, "");
+                        tempprofile.GrantBadge(created);
+                    } else
+                    {
+                        tempprofile.GrantBadge(tempbadge);
+                    }
+                    
                 };
             }
 

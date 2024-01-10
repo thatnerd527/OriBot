@@ -129,6 +129,8 @@ namespace OldOriBot.UserProfiles
         /// </summary>
         public int Version { get; internal set; } = 0;
 
+        public ulong ID = 0;
+
         /// <summary>
         /// The latest version handler, which is also the handler used to save this file.
         /// </summary>
@@ -395,7 +397,7 @@ namespace OldOriBot.UserProfiles
             ProfileCache[member.ID] = this;
 
             // Load from data persistence
-            string memberProfile = Member.ID.ToString() + ".profile";
+            string memberProfile = ID + ".profile";
             FileInfo target = new FileInfo(Path.Combine(ProfileDirectoryName, memberProfile));
 
             if (target.Exists)
@@ -638,7 +640,7 @@ namespace OldOriBot.UserProfiles
         {
             try
             {
-                string memberProfile = Member.ID.ToString() + ".profile";
+                string memberProfile = ID + ".profile";
                 FileInfo file = new FileInfo(Path.Combine(ProfileDirectoryName, memberProfile));
                 if (file.Exists)
                 {
@@ -669,7 +671,7 @@ namespace OldOriBot.UserProfiles
 
         public void Reload()
         {
-            string memberProfile = Member.ID.ToString() + ".profile";
+            string memberProfile = ID + ".profile";
             FileInfo file = new FileInfo(Path.Combine(ProfileDirectoryName, memberProfile));
             if (file.Exists)
             {
@@ -736,7 +738,7 @@ namespace OldOriBot.UserProfiles
                 level = Level.ToString("N0");
             }
 
-            DateTimeOffset creation = Member.ID.ToDateTimeOffset();
+            DateTimeOffset creation = new Snowflake(ID).ToDateTimeOffset();
             string creationTS = creation.AsDiscordTimestamp();
             string creationAge = creation.GetTimeDifferenceFrom();
             DateTimeOffset joinDate = Member.JoinedAt;

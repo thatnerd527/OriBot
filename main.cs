@@ -115,7 +115,7 @@ namespace main
 
             await discordclient.ConnectAsync();
             CommandMarshaller.Initialize();
-            await Task.Delay(15000);
+            while ((await DiscordClient.Current.Events.GuildEvents.OnGuildCreated.Wait()).ID != 1005355539447959552) { } 
             var botcontext = BotContextRegistry.GetContext(new Snowflake(1005355539447959552));
             var muteutil = MemberMuteUtility.GetOrCreate(botcontext);
             foreach (var item in profiles)

@@ -291,6 +291,12 @@ namespace OldOriBot.UserProfiles
                 Profile = profile;
             }
 
+            public int FromBytes2(byte[] bytes,ulong member)
+            {
+                Profile.ID = member;
+                return FromBytes(bytes);
+            }
+
             public override int FromBytes(byte[] data)
             {
                 Profile.Version = VERSION;

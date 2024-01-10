@@ -26,6 +26,13 @@ namespace OriBot.Framework.UserProfiles.Badges
         /// <summary>
         /// This static method will load all of the <see cref="Badge"/>s into <see cref="BadgeCache"/>
         /// </summary>
+        /// 
+
+        public static void AddToRegistry(Badge badge)
+        {
+            BadgeCache.Add(badge);
+        }
+
         public static void InitializeBadgeRegistry()
         {
             BadgeCache = new List<Badge>() {
