@@ -253,7 +253,10 @@ namespace main
                 Console.WriteLine($"Working with user number: {count++}");
                 User dbUser = new User
                 {
-                    UserId = profile.UserID
+                    UserId = profile.UserID,
+                    Description = profile.Description,
+                    Title = profile.Title,
+                    Color = profile.Color,
                 };
                 db.Users.Add(dbUser);
 

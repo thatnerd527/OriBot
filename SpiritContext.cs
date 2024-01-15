@@ -1,4 +1,6 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Discord;
+
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using System;
 using System.Collections.Generic;
@@ -13,6 +15,13 @@ public class SpiritContext : DbContext
         public DateConverter()
             : base(d => d.AddTicks(-(d.Ticks % TimeSpan.TicksPerSecond)),
                   d => d)
+        { }
+    }
+
+    private sealed class ColorConverter : ValueConverter<Color, uint>
+    {
+        public ColorConverter()
+            : base(c => c.RawValue, u => new Color(u))
         { }
     }
 
@@ -67,6 +76,11 @@ public class SpiritContext : DbContext
         configurationBuilder
             .Properties<Enum>()
             .HaveConversion<string>();
+
+        // color converter
+        configurationBuilder
+            .Properties<Color>()
+            .HaveConversion<ColorConverter>();
     }
 }
 #pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
@@ -74,6 +88,10 @@ public class User
 {
     [DatabaseGenerated(DatabaseGeneratedOption.None)]
     public required ulong UserId { get; set; }
+
+    public required string? Title { get; set; }
+    public required string? Description { get; set; }
+    public Color Color { get; set; }
 
     public List<UserBadge> UserBadges { get; set; }
     public List<Badge> Badges { get; set; }
