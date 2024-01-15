@@ -254,8 +254,8 @@ namespace main
                 User dbUser = new User
                 {
                     UserId = profile.UserID,
-                    Description = profile.Description,
-                    Title = profile.Title,
+                    Description = profile.Description == "" ? null : profile.Description,
+                    Title = profile.Title == "" ? null : profile.Title,
                     Color = profile.Color,
                 };
                 db.Users.Add(dbUser);
