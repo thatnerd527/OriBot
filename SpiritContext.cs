@@ -22,6 +22,7 @@ public class SpiritContext : DbContext
     public DbSet<PendingImageRole> PendingImageRoles { get; set; }
     public DbSet<Ticket> Tickets { get; set; }
     public DbSet<UserBadge> UserBadges { get; set; }
+    public DbSet<ApprovedIdea> ApprovedIdeas { get; set; }
 
     public SpiritContext(DbContextOptions<SpiritContext> options)
         : base(options)
@@ -76,6 +77,7 @@ public class User
 
     public List<UserBadge> UserBadges { get; set; }
     public List<Badge> Badges { get; set; }
+    public List<ApprovedIdea> ApprovedIdeas { get; set; }
 
     public List<Punishment> Punishments { get; set; }
     public List<Punishment> PunishmentsIssued { get; set; }
@@ -101,6 +103,15 @@ public class UserBadge
     public required Badge Badge { get; set; }
 
     public required int Count { get; set; }
+}
+public class ApprovedIdea
+{
+    public int ApprovedIdeaId { get; set; }
+
+    public required string Idea { get; set; }
+
+    public ulong UserId { get; set; }
+    public required User User { get; set; }
 }
 public class Punishment
 {

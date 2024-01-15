@@ -89,6 +89,7 @@ namespace OriBot.Framework.UserProfiles
             get => _MessagesSent;
             set
             {
+                //Logger.Info("Messages sent:" + value);
                 _MessagesSent = value;
             }
         }
@@ -655,7 +656,7 @@ namespace OriBot.Framework.UserProfiles
         /// <exception cref="ArgumentNullException"></exception>
         public Badge GrantBadge(Badge badge, bool upgradeIfAlreadyExists = false, bool replaceIfAlreadyExists = false)
         {
-            
+
             if (badge == null) throw new ArgumentNullException("badge");
             badge = badge.Instantiate(badge.customData);
             var targetsearch = BadgesInternal.FirstOrDefault(x => x.BadgeHashWithoutLevel == badge.BadgeHashWithoutLevel);
@@ -770,7 +771,7 @@ namespace OriBot.Framework.UserProfiles
             else if (File.Exists(tempprofile.LegacyFileName))
             {
                 var userprof = MigrateUserProfile(userid, tempprofile);
-               // userprof.Save();
+                // userprof.Save();
                 //File.Move(userprof.LegacyFileName, Path.Combine(UserProfile.BaseStorageDir, Path.GetFileNameWithoutExtension(userprof.CurrentFileName) + ".profile.backup"));
                 return userprof;
             }
@@ -793,7 +794,11 @@ namespace OriBot.Framework.UserProfiles
             // Conversion pt1
             var file = File.ReadAllBytes(tempprofile.LegacyFileName);
             var oldprofile = OldOriBot.UserProfiles.UserProfile.GetOrCreateProfileOf2(userid, file);
-            tempprofile._MessagesSent = oldprofile.MessagesSent;
+            if (tempprofile.UserID == 537399918025768982)
+            {
+                //Debugger.Break();
+            }
+            tempprofile.MessagesSent = (long)oldprofile.Experience;
             tempprofile.Color = (uint)(oldprofile.Color == null ? 0 : oldprofile.Color);
             tempprofile.Title = oldprofile.Title;
             tempprofile.Description = oldprofile.Description;
@@ -824,12 +829,13 @@ namespace OriBot.Framework.UserProfiles
                         Badge created = new Badge(item.Name, item.Description, item.MiniDescription, item.Icon, item.Level, item.ExperienceWorth, "");
                         BadgeRegistry.AddToRegistry(created);
                         tempprofile.GrantBadge(created);
-                    } else
+                    }
+                    else
                     {
                         tempbadge.Level = item.Level;
-                        tempprofile.GrantBadge(tempbadge,true);
+                        tempprofile.GrantBadge(tempbadge, true);
                     }
-                    
+
                 };
             }
 

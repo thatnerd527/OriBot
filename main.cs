@@ -247,6 +247,7 @@ namespace main
 
             db.SaveChanges();
             int count = 0;
+
             foreach (UserProfile profile in profiles)
             {
                 Console.WriteLine($"Working with user number: {count++}");
@@ -256,51 +257,33 @@ namespace main
                 };
                 db.Users.Add(dbUser);
 
-
-                //if (profile.UserID == 334743203603283969)
-                //    Debugger.Break();
-
                 foreach (OriBot.Framework.UserProfiles.Badges.Badge badge in profile.Badges)
                 {
                     if (badge.Name == "Approved Idea")
                     {
-                        var approved = new ApprovedIdeaBadge("Approved Idea","","Professional Thinker",":bulb:",1,2000,badge.customData);
+                        var approved = new ApprovedIdeaBadge("Approved Idea", "", "Professional Thinker", ":bulb:", 1, 2000, badge.customData);
+
+                        var dbApproved = new ApprovedIdea
+                        {
+                            Idea = approved.customData,
+                            User = dbUser
+                        };
+
+                        db.ApprovedIdeas.Add(dbApproved);
+                        db.SaveChanges();
+                    }
+                    else if (!db.Badges.Any(b => b.Name == badge.Name))
+                    {
                         var dbBadgeNew = new OriBot.DB.Badge
                         {
                             Name = badge.Name,
-                            Description = approved.Description,
+                            Description = badge.Description,
                             Emote = badge.Icon,
                             Experience = (int)badge.ExperienceWorth
                         };
 
                         db.Badges.Add(dbBadgeNew);
                         db.SaveChanges();
-
-                        UserBadge dbUserBadgeNew = new UserBadge
-                        {
-                            User = dbUser,
-                            Badge = dbBadgeNew,
-                            Count = badge.Level
-                        };
-
-                        db.UserBadges.Add(dbUserBadgeNew);
-                        db.SaveChanges();
-                    } else
-                    if (!db.Badges.Any(b => b.Name == badge.Name))
-                    {
-                        
-                            var dbBadgeNew = new OriBot.DB.Badge
-                            {
-                                Name = badge.Name,
-                                Description = badge.Description,
-                                Emote = badge.Icon,
-                                Experience = (int)badge.ExperienceWorth
-                            };
-
-                            db.Badges.Add(dbBadgeNew);
-                            db.SaveChanges();
-                        
-                        
                     }
 
                     if (badge.Name != "Approved Idea")
@@ -327,7 +310,6 @@ namespace main
                         db.UserBadges.Add(dbUserBadgeNew);
                         db.SaveChanges();
                     }
-
                 }
             }
 
